@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+  
+<%- include ("../partials/head") %>
+
+<body>
+    <div id="main-wrapper" data-theme="light" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+        data-sidebar-position="fixed" data-header-position="fixed" data-boxed-layout="full">
+        
+        <%- include ("../partials/header") %>
+        <!-- End Topbar header -->
+
+        <%- include ("../partials/sidebar") %>
+        <!-- End of sidebar -->
+
+        <!-- CONTENT -->
+        <div class="page-wrapper">
+            <div class="container-fluid">
+        
+                <!--------Keyword Search-->
+                <div id="isForm">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Add Keyword</h4>
+                                
+                                <form id='addkeywords' class="mt-4" style="display:flex;">
+                                    <div class="form-group" style="width: 100%;">
+                                        <input type="text" class="form-control" name="words" id="keywords" required placeholder="Enter Key Words">
+                                    </div>
+                                    <div class="form-group">
+                                        <button for="words"  type="submit" class="btn btn-primary" value="Keyword">Submit
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- basic table -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Keyword</h4>
+                                <div class="table-responsive">
+                                    <table id="zero_config" class="table table-striped table-bordered no-wrap">
+                                        <thead>
+                                            <tr>
+                                                <th hidden>Id</th>
+                                                <th>Id</th>
+                                                <th>Name</th>
+                                                <th>action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- {% for item in items %} -->
+        
+                                            <!-- <tr>
+                                            <td>{{ item.text }}
+                                    
+                                    
+                                                <td>
+                                                    <button data-id="{{item.Id}}" onclick="EditFun('{{item.Id}}','{{item.text}}')" type="button" class="btn btn-warning margin-bottom delete-company" >
+                                                        Edit
+                                                    </button>
+                                                    <td>
+                                                    <a href="{% url 'delete_keywords'%}?pk= {{ item.Id }}"   class="btn btn-danger btn-sm" role="button"
+                                                    aria-pressed="true"> x</a></td>
+                                    
+                                    </tr> -->
+                                    
+                                            <!-- {% endfor %} -->
+                                        </tbody>
+                                    
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                    
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <h4 class="card-title">Update Keyword</h4>
+                                                <!-- <form action='updatekeywords' method='GET' class="mt-4" style="display:flex;"> -->
+                                                        <div class="form-group" style="width: 100%;">
+                                                            <input type="text" class="form-control" name="words" id="words" required value="" placeholder="Enter Key Words">
+                                                        </div>
+                                                        <input type="hidden" id="userId" name="userId"/>
+                                                        <div class="form-group">
+                                                            <!-- <button for="words" type="button" b class="btn btn-primary"  value="Keyword">Update
+                                                            </button> -->
+                                                            <button type="button" id="btnSave" class="btn btn-primary">Update</button>
+                                                        </div>
+                                                    <!-- </form> -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <script>
+                                        setTimeout(function() { jQuery('#modal').modal('hide'); }, 1000);
+                                        
+                                        $('body').on('hidden.bs.modal', '.modal', function () {
+                                            $(this).removeData('bs.modal');
+                                        });
+                                    </script>
+                                </div>
+                                <div class="modal-footer">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ./CONTENT -->
+
+    </div>
+        
+    <%- include ("../partials/footer") %>
+    <!-- End of footer -->
+    <script type="text/javascript">
+        $("#addkeywords").submit(function () {
+           var words= $("#keywords").val();
+           $.ajax({
+           url: "{% url 'addkeywords' %}",
+           type: 'POST',
+           data: {
+               keyword:words,
+               csrfmiddlewaretoken: '{{ csrf_token }}',
+           },
+           success: function(json){
+               if (json.result == "Successfully saved") {
+                   toastr["success"](json.result ,'Success Message!');
+                   }
+               else {
+                   toastr["error"]('Warning!');
+       
+               }
+               $('#modal').modal('hide');
+       
+               $("#zero_config tbody").empty();
+               loadData();
+           },
+           error: function(xhr, errmsg, err) {}
+       })
+       return false;
+       });
+       loadData()
+       $("#btnSave").click(function () {
+               UpdateFunction();
+           });
+       function EditFun(ele){
+           $("#userId").val($(ele).closest("tr").find("td:eq(0)").text())
+           $("#words").val($(ele).closest("tr").find("td:eq(2)").text())
+           $('#modal').modal('show');
+       }
+       function UpdateFunction(ele)
+       {
+           var kId=$("#userId").val();
+           var words= $("#words").val();
+           $.ajax({
+           url: "{% url 'updatekeywords' %}",
+           type: 'POST',
+           data: {
+               Id: kId,
+               keyword:words,
+               csrfmiddlewaretoken: '{{ csrf_token }}',
+           },
+           success: function(json){
+               if (json.result == "Successfully Updated") {
+                   toastr["success"](json.result ,'Success Message!');
+                   }
+               else {
+                   toastr["error"]('Warning!');
+       
+               }
+               $('#modal').modal('hide');
+       
+               $("#zero_config tbody").empty();
+               loadData();
+           },
+           error: function(xhr, errmsg, err) {}
+       })
+       }
+       function loadData()
+           {
+               
+           $.ajax({
+           url: "{% url 'addkeywords' %}",
+           type: 'GET',
+           success: function(json){
+               var index = 1;
+             json.forEach((element) => {
+            
+           $("#zero_config tbody").append("<tr style='color:#000;'><td  style='display:none'>" + element.Id + "</td><td>" + index+ "</td><td>" + element.text + "</td><td><a onclick='EditFun(this)' class='btn btn-warning margin-bottom delete-company' style='margin-right: 7px;height: 32px;'>Edit</a><a onclick='Remove(this)' class='btn btn-danger btn-sm'>Delete</a></td></tr>");
+               index++
+           });
+           $('#zero_config').DataTable();
+           },
+           error: function(xhr, errmsg, err) {}
+       })
+           }
+           
+       function Remove(ele)
+       {
+           var x = confirm("Are you sure you want to delete?");
+         if (x)
+            {
+           var Id=$(ele).closest("tr").find("td:eq(0)").text();
+           $.ajax({
+           url: "{% url 'delete_keywords' %}",
+           type: 'POST',
+           data: {
+               postid: Id,
+               csrfmiddlewaretoken: '{{ csrf_token }}',
+           },
+           success: function(json){
+               $("#zero_config tbody").empty();
+               loadData();
+           },
+           error: function(xhr, errmsg, err) {}
+       })
+       }
+         else
+           return false;
+           
+       }
+       
+</script>
+</body>
+</html>

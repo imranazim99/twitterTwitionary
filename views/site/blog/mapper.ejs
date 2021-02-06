@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+  
+<%- include ("../partials/head") %>
+
+<body>
+    <div id="main-wrapper" data-theme="light" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
+        data-sidebar-position="fixed" data-header-position="fixed" data-boxed-layout="full">
+        
+        <%- include ("../partials/header") %>
+        <!-- End Topbar header -->
+
+        <%- include ("../partials/sidebar") %>
+        <!-- End of sidebar -->
+
+        <!-- CONTENT -->
+        <div class="page-wrapper">
+            <div class="container-fluid">
+    
+                <!--------Tweet Mapper Search-->
+                <div class="row">
+                    <div class="col-md-12 align-items-center">
+                        <h5>Enter a Twitter user name to view all their tweets, likes, followers or timeline</h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <form action="/blog/mapper" method="GET" class="mt-2">
+                                    <h4 class="card-title">Search From Twitter</h4>
+
+                                    <div class="form-group" style="width: 100%; display: flex;">
+                                        <input type="text" class="form-control" required name="search" id="search" placeholder="Enter user" value="<%= search %>">
+                                        <button type="submit" id="searchBtn" class="btn btn-success" disabled>OK</button>
+                                    </div>
+                                    <div>
+                                        <div style="display:flex;" class="mb-5">
+                                            <img src="https://img.icons8.com/fluent/48/000000/twitter.png" alt="" width="70"
+                                                height="70" id="profileImage">
+                                            <p style="font-size:30px;" class="ml-3" id="name"></p>
+                                            <p style="position: absolute; margin-left: 88px; margin-top: 40px;">
+                                                <small class="text-muted" id="screenName"></small>
+                                                <small class="text-muted" id="createdAt"></small>
+                                            </p>
+                                        </div>
+                                        <span id="totalTweets" ></span>  Tweets | 
+                                        <span id="followerCount"></span>  Followers |
+                                        <span id="followingCount"></span>  Following |
+                                        <i class="fa fa-map"></i> <span id="location"></span>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="row mb-1">
+                    <div class="col-md-7">
+                        <div class="card">
+    
+                            <h1 class="py-2 px-2">All My Tweets</h1>
+    
+                            <div class="card-body">
+                                <button type="button" id="btntweets" name="action" value="tweets"
+                                    class="btn btn-primary">Tweets Details <i class="fa fa-level-down-alt"></i></button>
+                                <button type="button" id="btnfollowers" name="action" value="followers"
+                                    class="btn btn-primary ml-2">Followers Details <i class="fa fa-level-down-alt"></i></button>
+                                <button type="button" id="btnfollowing" class="btn btn-primary ml-2" name="action"
+                                    value="following">Following Details <i class="fa fa-level-down-alt"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--------Tweet Mapper Search-->
+    
+                <!-------All Tweets Section -->
+    
+                <div class="row" id="tweets">
+                    <div class="col-md-12">
+                        <h4>All My Tweets</h4>
+                        <div id="tweetsArr">
+                        </div>
+                    </div>
+                </div>
+                <!-------All Tweets Section -->
+    
+                <!---- All My Followers -->
+    
+                <div class="row" id="followers">
+                    <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
+                        <h4>All My Followers</h4>
+                        <div id="followersArr">
+                        
+                        </div>
+                    </div>
+                </div>
+    
+                <!---- All My Followers -->
+    
+                <!------All following Sections-->
+               
+                <div class="row" id="followings">
+                    <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
+                        <h4>All My Following</h4>
+                        <div id="followingsArr">
+                       
+                        </div>
+                    </div>
+                </div>
+    
+                <!------All following Sections-->
+            </div>
+        </div>
+        <!-- ./CONTENT -->
+
+    </div>
+        
+    <%- include ("../partials/footer") %>
+    <!-- End of footer -->
+    <script>
+        // get formated date and time
+        function getFormatedDate(type, dt) {
+            var dateTime = new Date(dt);
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "July", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            let date = dateTime.getDate();
+            let dayName = dayNames[dateTime.getDay()];
+            let month = (dateTime.getMonth()) + 1;
+            let monthName = monthNames[dateTime.getMonth()];
+            let year = dateTime.getFullYear();
+            let seconds = dateTime.getSeconds();
+            let minuts = dateTime.getMinutes();
+            let hrs = dateTime.getHours();
+
+            if(type == 'date') {
+                var returnDate = monthName+' '+date+', '+year;
+                return returnDate;
+            } else if(type == 'time') {
+                let returnTime = hrs+':'+minuts+':'+seconds;
+                return returnTime;
+            } else {
+                let dtIntl = new Intl.DateTimeFormat("en" , {
+                    timeStyle: "short",
+                    dateStyle: "full"
+                });
+                let returnDateTime = dtIntl.format(dateTime);
+                return returnDateTime;
+            }
+        }
+        // load user details
+        function loadUserData(user) {
+            if(user != '') {
+                $(".preloader").fadeIn();
+                $.ajax({
+                    url: "/blog/mapper/load-user-detail",
+                    type: 'POST',
+                    data: {
+                        search: user,
+                        q_search: 'user'
+                    },
+                    success: function (data) {
+                        $(".preloader").fadeOut();
+                        if(data.success) {
+                            $("#name").text(data.name);
+                            $("#screenName").text('@'+data.screenName);
+                            $("#createdAt").text(', '+data.createdAt);
+                            $("#totalTweets").text(data.totalTweets);
+                            $("#followerCount").text(data.followerCount);
+                            $("#followingCount").text(data.followingCount);
+                            $("#location").text(data.location);
+                            $("#profileImage").attr('src', "" + data.profileImage);
+                        } else {
+                            $("#name").html('<span class="text-muted">'+data.message+'</span>');
+                        }
+                    },
+                    
+                    error: function (xhr, errmsg, err) {
+                        $(".preloader").fadeOut();
+                        console.log('errorda: ', err)
+                     }
+                })
+            }
+        }
+        // keep mapper menu item active
+        $(function() {
+            $('#sidebarnav #blog-mapper').attr('href', '/blog/mapper?search=<%=search%>');
+            $('#sidebarnav #blog-mapper').addClass('active');
+            $('#sidebarnav #blog-mapper').closest('li').addClass('selected');
+
+            if($("#search").val() != '') {
+                $("#searchBtn").attr("disabled", false);
+                // Load user data on load
+                loadUserData($("#search").val());
+            }
+        });
+
+        $(document).ready(function () {
+
+            // check input fields
+            $("input#search").on({
+                keydown: function(e) {
+                    if (e.which === 32)
+                    return false;
+                },
+                keyup: function() {
+                    this.value = this.value.replace(/\s/g, "");
+                    if(this.value != '') {
+                        $("#searchBtn").attr("disabled", false);
+                    } else {
+                        $("#searchBtn").attr("disabled", true);
+                    }
+                }
+            });
+            $("#tweets").hide();
+            $("#followers").hide();
+            $("#followings").hide();
+
+            // load all my tweets
+            $("#btntweets").click(function () {
+                var search = $("#search").val();
+                if(search != '') {
+                    $(".preloader").fadeIn();
+                    $.ajax({
+                        url: '/blog/mapper/load-user-detail',
+                        type: 'POST',
+                        data: {
+                            search: search,
+                            q_search: 'tweets',
+                        },
+                        success: function (data) {
+                            $("#followers").hide();
+                            $("#followings").hide();
+                            $("#tweets").show();
+                            $("#tweetsArr").empty();
+                            $("#followersArr").empty();
+                            $("#followingsArr").empty();
+                            if(data.success) {
+                                for(var i = 0; i < data.dataArr.length; i++)
+                                {
+                                    let dt = getFormatedDate('datetime',data.dataArr[i].created_at);
+
+                                    $("#tweetsArr").append('<div class="card mb-1">'+
+                                    '<div class="card-body collapse show">'+
+                                        '<date class="text-muted">'+dt+'</date>'+
+                                        '<p class="card-text">'+data.dataArr[i].text+
+                                        '</p>'+
+                                    '</div>'+'</div>')
+                                }
+                                $(".preloader").fadeOut();
+                                window.scrollTo({
+                                    top: 370,
+                                    behavior: 'smooth'
+                                });
+                            } else {
+                                // code
+                                $("#tweetsArr").append('<div class="card">'+
+                                '<div class="card-body collapse show">'+
+                                    '<p class="card-text">'+data.message+'<span>'+'.'+'</span>'+
+                                        '<date><u>------</u></date>'+
+                                    '</p>'+
+                                '</div>'+'</div>')
+                            }
+                        },
+                        error: function (xhr, errmsg, err) { 
+                            $(".preloader").fadeOut();
+                        }
+                    })
+                } else {
+                    return false;
+                }
+            });
+            // all my followers
+            $("#btnfollowers").click(function () {
+                var search = $("#search").val();
+                if(search != '') {
+                    $(".preloader").fadeIn();
+                    $.ajax({
+                        url: "/blog/mapper/load-user-detail",
+                        type: "POST",
+                        data: {
+                            search: search,
+                            q_search: "followers"
+                        },
+                        success: function (data) {
+                            $("#followings").hide();
+                            $("#tweets").hide();
+                            $("#followers").show();
+                            $("#tweetsArr").empty();
+                            $("#followersArr").empty();
+                            $("#followingsArr").empty();
+                            
+                            if(data.success) {
+                                for(var i=0; i < data.dataArr.length; i++)
+                                {
+                                $("#followersArr").append('<div class="card mb-1">'+
+                                    '<div class="card-body" style="display: flex;">'+
+                                        '<p class="card-text">'+
+                                            '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
+                                            data.dataArr[i].name+ ' | <i class="fa fa-link" style="font-size: small;"></i> <a href="/blog/mapper?search='+data.dataArr[i].screen_name+'" class="card-link"> @'+data.dataArr[i].screen_name+
+                                            '</a> | '+ data.dataArr[i].followers_count+ ' Followers | '+
+                                            ''+ data.dataArr[i].friends_count + ' Followings | '+
+                                            '<i class="fa fa-map"></i> '+data.dataArr[i].location+
+                                        '</p>'+
+                                    '</div>'+
+                                '</div>');
+                                }
+                            } else {
+                                $("#followersArr").append('<div class="card">'+
+                                    '<div class="card-body" style="display: flex;">'+
+                                        '<p class="card-text">'+
+                                            data.message
+                                        +'</p>'+
+                                    '</div>'+
+                                '</div>');
+                            }
+                            $(".preloader").fadeOut();
+                            window.scrollTo({
+                                top: 370,
+                                behavior: 'smooth'
+                            });
+                        },
+                        error: function (xhr, errmsg, err) {
+                            $(".preloader").fadeOut();
+                        }
+                    })
+                } else {
+                    return false;
+                }
+            });
+            // all my followings
+            $("#btnfollowing").click(function () {
+                var search = $("#search").val();
+                if(search != '') {
+                    $(".preloader").fadeIn();
+                    $.ajax({
+                        url: "/blog/mapper/load-user-detail",
+                        type: "POST",
+                        data: {
+                            search: search,
+                            q_search: 'following'
+                        },
+                        success: function (data) {
+                            $("#tweets").hide();
+                            $("#followers").hide();
+                            $("#followings").show();
+                            $("#tweetsArr").empty();
+                            $("#followersArr").empty();
+                            $("#followingsArr").empty();
+                            if(data.success) {
+                                for(var i = 0; i < data.dataArr.length; i++)
+                                {
+                                $("#followingsArr").append('<div class="card mb-1">'+
+                                    '<div class="card-body" style="display: flex;">'+
+                                        '<p class="card-text">'+
+                                            '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
+                                            data.dataArr[i].name+ ' | <i class="fa fa-link" style="font-size: small;"></i> <a href="/blog/mapper?search='+data.dataArr[i].screen_name+'" class="card-link"> @'+data.dataArr[i].screen_name+
+                                            '</a> | '+ data.dataArr[i].followers_count+ ' Followers | '+
+                                            ''+ data.dataArr[i].friends_count + ' Followings | '+
+                                            '<i class="fa fa-map"></i> '+data.dataArr[i].location+
+                                        '</p>'+
+                                    '</div>'+
+                                '</div>');
+                                }
+
+                            } else {
+                                $("#followingsArr").append('<div class="card">'+
+                                    '<div class="card-body" style="display: flex;">'+
+                                        '<p class="card-text">'+
+                                            data.message
+                                        +'</p>'+
+                                    '</div>'+
+                                '</div>');
+                            }
+                            window.scrollTo({
+                                top: 370,
+                                behavior: 'smooth'
+                            });
+                            $(".preloader").fadeOut();
+                        },
+                        error: function (xhr, errmsg, err) { 
+                            $(".preloader").fadeOut();
+                        }
+                    })
+                } else {
+                    return false;
+                }
+            });
+           
+
+        });
+    </script>
+
+</body>
+</html>
