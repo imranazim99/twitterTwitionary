@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   
-<%- include ("../partials/head") %>
+<%- include ("../partials/head") %>    
 <style>
     .LockOn {
       display: block;
@@ -13,7 +13,6 @@
       width: 105%;
       height: 105%;
       background-color:white;
-      vertical-align:bottom;
       padding-top: 20%; 
       filter: alpha(opacity=75); 
       opacity: 0.75; 
@@ -47,15 +46,17 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
+                            <h4 class="card-header">Search Keywords</h4>
                             <div class="card-body">
-                                <h4 class="card-title">Search Keywords</h4>
                                 <form name="frm" id="frm">
                                     <div class="form-group" style="width: 100%;display: flex;">
                                         <input type="text" class="form-control" required name="search" id="searchwords" placeholder="Enter keyword, hashing or website...">
                                         <button type="submit" class="btn btn-primary">Search</button>
                                     </div>
-                                    <input type="radio" value="database" checked name="database" id="database" onchange="value2Changed()">&nbsp;Database
-                                    <input type="radio" value="realtime" name="realtime" id="realtime" onchange="value1Changed()">&nbsp;Real Time
+                                    <input type="radio" value="database" checked name="radioBtn" id="database" />&nbsp;<label for="database">Database</label>
+                                    <input type="radio" value="realtime" name="radioBtn" id="realtime" />&nbsp;<label for="realtime">Real Time</label>
+                                    <input type="hidden" id="startdb" name="startdb" value="6">
+                                    <input type="hidden" id="next_result" name="next_result" value="">
                                 </form>
                             </div>
                         </div>
@@ -132,7 +133,7 @@
     
                 <!--------Tweets Analysis-->
                 <div class="row">
-                    <div class="col-sm-6 col-sm-6 col-lg-6 col-xs-12 mb-3">
+                    <div class="col-sm-6 col-lg-6 col-xs-12 mb-0">
                         <div class="card">
                             <div class="card-header">Tweets By Sentiments</div>
                             <div class="card-body">
@@ -140,7 +141,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-6 col-sm-6 col-lg-6 col-xs-12 mb-3">
+                    <div class="col-sm-6 col-lg-6 col-xs-12 mb-0">
                         <div class="card">
                             <div class="card-header">Tweets By Type</div>
                             <div class="card-body">
@@ -151,7 +152,7 @@
                 </div>
     
                 <div class="row">
-                    <div class="col-sm-12 mb-3">
+                    <div class="col-sm-12 mb-0">
                         <div class="card">
                             <div class="card-header">Tweets Over Time</div>
                             <div class="card-body">
@@ -164,23 +165,21 @@
                 <!--------Tweets Analysis-->
     
                 <!------ All Tweets------->
-    
+
                 <div class="row">
-                    <h5>Twitter Feed</h5>
-                </div>
-                <div class="row">
-    
-                    <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12 ml-5">
-                        <div class="grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 350, "gutter":20 }'
-                            id="urlpost">
-    
-                            <div class="grid-item row">
-                                <!-- <a href="{% url 'mapper'%}?search= {{ post.username }}&action=tweets" target="_blank"><img
-                                        src="https://img.icons8.com/fluent/48/000000/twitter.png" />{{ post.username }}</a>
-                                <blockquote class="twitter-tweet">
-    
-                                    <a href={{ post.urll }}></a>
-                                </blockquote> -->
+                    <div class="col-sm-12">
+                        <div class="card py-3">
+                            <div class="card-header">Twitter Feed</div>
+                            <div class="card-body grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 360, "gutter":20 }' id="urlpost">
+                                <div class="row grid-item">
+                                    <!-- tweets will append here -->
+                                </div>
+                            </div>
+                            <!-- On scroll loading spinner -->
+                            <div class="d-flex justify-content-center">
+                                <div class="spinner-border text-info" role="status" id="load-spinner" style="display: none;">
+                                  <span class="sr-only">Loading...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -193,142 +192,56 @@
     <%- include ("../partials/footer") %>
     <!-- End of footer -->
 
-    <script>
-        window.onscroll = function () {
-           var d = document.documentElement;
-           var offset = d.scrollTop + window.innerHeight;
-           var height = d.offsetHeight;
-           var allowScroll;
-           if (offset >= height - 1) {
-               //  loadData();
-               console.log('Scroll down');
-
-           }
-       };
-       function value1Changed() {
-
-           document.getElementById("database").checked = false;
-       }
-   </script>
-   <script>
-       function value2Changed() {
-           document.getElementById("realtime").checked = false;
-
-       }
-   </script>
-
-   <script>
-       let search = window.location.search.slice(1).split("&")[0].split("=")[1];
+   <script type="text/javascript">
+        let search = window.location.search.slice(1).split("&")[0].split("=")[1];
        $('#search').val(search);
 
-       // Twitter widget is loading.
-       window.twttr = function (d, s, id) {
-           var t, js, fjs = d.getElementsByTagName(s)[0];
-           if (d.getElementById(id)) return;
-           js = d.createElement(s);
-           js.id = id;
-           js.src = "https://platform.twitter.com/widgets.js";
-           fjs.parentNode.insertBefore(js, fjs);
-           return window.twttr || (t = {
-               _e: [],
-               ready: function (f) {
-                   t._e.push(f)
-               }
-               
-           });
-       }(document, 'script', 'twitter-wjs');
+       
+        // Twitter widget is loading.
+        window.twttr = (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0],
+                t = window.twttr || {};
+            if (d.getElementById(id)) return t;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://platform.twitter.com/widgets.js";
+            fjs.parentNode.insertBefore(js, fjs);
 
-       // When widget is ready, run masonry
+            t._e = [];
+            t.ready = function(f) {
+                t._e.push(f);
+            };
+
+            return t;
+        }(document, "script", "twitter-wjs"));
+        // twttr.widgets.load();
+
+        // When widget is ready, run masonry
        twttr.ready(function (twttr) {
-           
+            twttr.events.bind('loaded', function (event) {
+                $('.grid').masonry({
+                    itemSelector: '.grid-item'
+                });
+            });
+        });
 
-           twttr.events.bind('loaded', function (event) {
-     
-               
-               $('.grid').masonry({
-                   
-                   itemSelector: '.grid-item',
-                   // columnWidth: 600,
-                   // gutter: 20
-               });
-          
-
-           });
-           $(".preloader").fadeOut();
-       });
-   </script>
-
-   <script type="text/javascript">
-       let lastId;
-       function loadData() {
-           countLastId = lastId.Id
-           console.log('last Id', countLastId)
-           var search = $("#searchwords").val();
-           var checkbox = '';
-           if ($('input[name="realtime"]').is(':checked')) {
-               checkbox = 'realtime';
-           }
-           else {
-               checkbox = 'database';
-           }
-           $(".preloader").fadeIn();
-           $.ajax({
-            //    url: "{% url 'twitter_details' %}",
-                url: '',
-                type: 'POST',
-                data: {
-                    search: search,
-                    checkbox: checkbox,
-                    lastId: countLastId
-                },
-                success: function (json) {
-                 
-                   var urlpost = $('#urlpost');
-                   var html = "";
-                   lastId = json.posts[json.posts.length - 1];
-                   for (i = 0; i < json.posts.length; i++) {
-                       console.log(json.posts[i].urll)
-                       // console.log(json.posts)
-                       html = $('.grid-item').append('<div class ="col-sm-4"><a href="' + json.posts[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + json.posts[i].username + '</a>' +
-                           '<blockquote class="twitter-tweet"><a href=' + json.posts[i].urll + '></a></blockquote></div>')
-                           $(window).on('load', function () {
-                       // $(".preloader").fadeOut();
-
-                   });html.appendTo(urlpost);
-                   }
-
-
-                   twttr.widgets.load(
-
-                       document.getElementById("#urlpost")
-
-                   );// END ulr
-                setTimeout(function(){ $(".preloader").fadeOut(); }, 5000);   
-               },
-               error: function (xhr, errmsg, err) { }
-           })
-       }
     // append tweets
         function appendTweetsWidgets(data) {
-            $(".preloader").fadeIn();
-            var urlpost = $('#urlpost');
-            var html = "";
-            $('.grid-item').empty();
-            lastId = data[data.length - 1];
-
-            for (var i = 0; i < data.length; i++) {                       
-
-                html = $('.grid-item').append('<div class ="col-sm-4"><a href="' + data[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data[i].username + '</a>' +
-                    '<blockquote class="twitter-tweet"><a href=' + data[i].urll + '></a></blockquote></div>')
+            if(data && data.length > 0) {
+                var urlpost = $('#urlpost');
+                var html = "";
+                // lastId = data[data.length - 1];
+    
+                for (var i = 0; i < data.length; i++) {                       
+    
+                    html = $('.grid-item').append('<div class ="col-sm-4"><a href="' + data[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data[i].username + '</a>' +
+                    '<blockquote class="twitter-tweet spinner-border text-info" id="'+data[i].tweetId+'"><a href=' + data[i].urll + '></a></blockquote></div>');
+    
                     html.appendTo(urlpost);
-                    console.log(i,data.length)
-                    if(i == data.length) {
-                        $(".preloader").fadeOut();
-                    }
-                }            
-                twttr.widgets.load(
-                    document.getElementById("#urlpost")
-                );
+                    // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
+                }
+                twttr.widgets.load(document.getElementById('urlpost'));
+            }
         }
     // ./append tweets
 
@@ -508,12 +421,9 @@
     $("#frm").submit(function () {
         $(".preloader").fadeIn();
         var search = $("#searchwords").val();
-        var checkbox = '';
-        if ($('input[name="realtime"]').is(':checked')) {
+        var checkbox = 'database';
+        if ($('input[id="realtime"]').is(':checked')) {
             checkbox = 'realtime';
-        }
-        else {
-            checkbox = 'database';
         }
         $.ajax({
             url: "/blog/tweets/search",
@@ -523,6 +433,9 @@
                 checkbox: checkbox
             },
             success: function (data) {
+                checkbox == 'database' ? $("#startdb").val(data.startdb):$("#next_result").val(data.next_result);
+
+                $('.grid-item').empty();
                 //START total tweets ,total retweets and total location
                 $("#totalTweets").text(data.totalTweets)
                 $("#total_retweets").text(data.retweets)
@@ -540,6 +453,62 @@
             }
         })
         return false;
+    });
+
+    // Load more data on scrole
+    $(document).ready(function() {
+        var isRequested;
+        $(window).scroll(function() {
+            if (!isRequested && $(window).scrollTop() + $(window).height() == $(document).height()) {
+                var startdb = $("#startdb").val();
+                var nextResult = $("#next_result").val();
+                var search = $("#searchwords").val();
+                var checkbox = 'database';
+                if ($('input[id="realtime"]').is(':checked')) {
+                    checkbox = 'realtime';
+                }
+                if(search != '') {
+                    isRequested = true;
+                    $("#load-spinner").css("display","block");
+                    $.ajax({
+                        url: "/blog/tweets/search",
+                        type: 'POST',
+                        data: {
+                            startdb: startdb,
+                            next_result: nextResult,
+                            search: search,
+                            checkbox: checkbox
+                        },
+                        success: function (data) {
+                            if(data && data.posts.length > 0) {
+                                
+                                checkbox == 'database' ? $("#startdb").val(data.startdb):$("#next_result").val(data.next_result);
+
+                                //START total tweets ,total retweets and total location
+
+                                $("#totalTweets").text(data.totalTweets);
+                                $("#total_retweets").text(data.retweets)
+                                $("#tweets_location").text(data.tweets_location)
+                                $("#totalTweets1").text(data.totalTweets)
+                                $("#total_followers1").text(data.total_followers)
+                                $("#tweets_location1").text(data.tweets_location)
+                                // //END total tweets ,total retweets and total location
+                                // drawCharts(data);
+                                appendTweetsWidgets(data.posts);
+                            }
+                            $("#load-spinner").css("display","none");
+                            setTimeout(function() {
+                                isRequested = false;
+                           }, 5000);
+                        },
+                        error: function (xhr, errmsg, err) {
+                            $("#load-spinner").css("display","none");
+                            isRequested = false;
+                        }
+                    })
+                }
+            }
+        }) 
     });
 
    </script>

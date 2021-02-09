@@ -10,8 +10,9 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     dialect: 'mysql',
     logging: false
 });
-const Tweets = require('../../../models/site/tbl_twitter');
-const Hashtag = require('../../../models/site/tbl_hashtag');
+const Tweets = require('../../../models/site/tbl_twitter'),
+    Hashtag = require('../../../models/site/tbl_hashtag'),
+    Keyword = require('../../../models/site/tbl_keyword');
 
 // twitter keys
 var T = new Twit({
@@ -43,7 +44,12 @@ router.post('/tweets/search', async (req, res) => {
     var count_username = 0; var tweets_count = 0; var tweets_location = 0; var retweets_count = 0; var total_tweets = 0; var total_followers = 0;
 
     if(checkBox == 'database') {
-        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id LIMIT 50';
+        let startdb = 0;
+        if(req.body.startdb) {
+            startdb = req.body.startdb;
+        }
+        console.log('dtstart: ', startdb)
+        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id LIMIT '+startdb+', 6';
 
         var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
             // console.log('dataa: ', result);
@@ -68,6 +74,7 @@ router.post('/tweets/search', async (req, res) => {
                 }
                 postArr.push({
                     'Id'            : item.id,
+                    'tweetId'       : item.id,
                     'text'          : item.text,
                     'username'      : item.Username,
                     'dated'         : item.tweetcreatedts,
@@ -120,13 +127,26 @@ router.post('/tweets/search', async (req, res) => {
             'terr':             terribleCounter,
             'retweets':         retweets_count,
             'totalTweets':      total_tweets,
-            'total_followers':  total_followers
-        })
+            'total_followers':  total_followers,
+            'startdb':          Number(startdb)+6
+        });
 
     } else {
         // realtime data from twitter api
-        T.get('search/tweets', { q: searchKey, count: 100 }, async function(err, data, response) {
-            // console.log('twit data: ', data.statuses);
+        let maxId = '';
+        if(req.body.next_result) {
+            maxId = req.body.next_result;
+        }
+        T.get('search/tweets', { q: searchKey, count: 6, max_id: maxId }, async function(err, data, response) {
+            // console.log('twit data: ', data.search_metadata)
+            if(data.search_metadata.next_results != null) {
+                resultsExist = data.search_metadata.next_results;
+                isEqualsToLocation = resultsExist.indexOf('=');
+                andLocation = resultsExist.indexOf('&');
+                maxId = resultsExist.substring(isEqualsToLocation+1,andLocation);
+                // console.log('maxId', maxId)
+            }
+
             var result = data.statuses;
             result.forEach(item => {
                 // console.log('dataa: ', item);
@@ -152,11 +172,12 @@ router.post('/tweets/search', async (req, res) => {
                 }
                 postArr.push({
                     'Id'            : item.user.id,
+                    'tweetId'       : item.id,
                     'text'          : item.text,
                     'username'      : item.user.screen_name,
                     'retweetcount'  : item.retweet_count,
                     'location'      : item.user.location,
-                    'urll'          : "https://twitter.com/user/status/"+item.id,
+                    'urll'          : "https://twitter.com/user/status/"+item.id_str,
                     'blogUrl'       : "/blog/mapper?search="+item.user.screen_name,
                     'description'   : item.user.description,
                     'following'     : item.user.friends_count,
@@ -199,8 +220,9 @@ router.post('/tweets/search', async (req, res) => {
                 'terr':             terribleCounter,
                 'retweets':         retweets_count,
                 'totalTweets':      total_tweets,
-                'total_followers':  total_followers
-            })
+                'total_followers':  total_followers,
+                'next_result':      maxId
+            });
         })
     }
 })
@@ -213,15 +235,6 @@ router.get('/mapper', (req, res) => {
         errorFlash: req.flash('error'),
         title: "Mapper",
         search: searchKey
-    });
-})
-
-// keywords
-router.get('/keywords', (req, res) => {
-    res.render('site/blog/keywords',{
-        successFlash: req.flash('success'),
-        errorFlash: req.flash('error'),
-        title: "Keywords"
     });
 })
 
@@ -263,9 +276,9 @@ router.post('/mapper/load-user-detail', (req, res) => {
     const qSearch = req.body.q_search;
     if(searchKey && qSearch == "user") {
         T.get('statuses/user_timeline', { screen_name: searchKey, count: 1 }, async function(err, data, response) {
-            // console.log(data[0])
+            // console.log('User: ', data[0])
             if(data && data.length > 0) {
-                const createAt = dateFormat(data[0].user.created_at, "ddd, mmm dS, yyyy, h:MM:ss TT");
+                const createAt = dateFormat(data[0].user.created_at, "ddd, mmm dS, yyyy, h:MM TT");
                 return res.status(200).send({
                     "success": true,
                     "screenName": data[0].user.screen_name,
@@ -292,7 +305,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
                     "message": "Sorry, There were no tweets found for the user "+searchKey
                 });
             } else {
-                console.log(data)
+                // console.log(data)
                 res.send({
                     "success": true,
                     "dataArr": data
@@ -301,7 +314,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
         })
     } else if(searchKey && qSearch == "followers") {
         T.get('followers/list', { screen_name: searchKey, count: 50 }, async function(err, data, response) {
-            console.log(err,data)
+            // console.log(err,data)
             if(err) {
                 return res.send({
                     "success": false,
@@ -336,5 +349,96 @@ router.post('/mapper/load-user-detail', (req, res) => {
     }
 })
 
+
+// ===================================
+//          Keywords
+// ===================================
+// keywords page render
+router.get('/keywords', (req, res) => {
+    res.render('site/blog/keywords',{
+        successFlash: req.flash('success'),
+        errorFlash: req.flash('error'),
+        title: "Keywords"
+    });
+})
+// #get list of keywords
+router.get('/keywords/get', (req, res) => {
+    Keyword.findAll({}).then(result => {
+        res.send({
+            "success": true,
+            "dataArr": result
+        });
+    }).catch(err => {
+        res.send({
+            "success": false,
+            "msg": 'Error! Something went wrong. '+err
+        });
+    })
+})
+// #add keywords
+router.post('/keyword/add', (req, res) => {
+    if(req.body.keyword) {
+        Keyword.create({
+            Keyword: req.body.keyword
+        }).then(record => {
+            console.log(record);
+            res.send({
+                "success": true,
+                "msg": "Record has been added successfully."
+            });
+        }).catch(err => {
+            res.send({
+                "success": false,
+                "msg": 'Error! Something went wrong. '+err
+            });
+        })
+    }
+})
+// #update keyword
+router.post('/keyword/update', (req, res) => {
+    if(req.body.Id && req.body.keyword) {
+        Keyword.update({
+                Keyword: req.body.keyword,
+            },
+            {
+                where: {
+                    Id: req.body.Id
+                }
+            }
+        ).then(record => {
+            console.log(record);
+            res.send({
+                "success": true,
+                "msg": "Record has been udpated successfully."
+            });
+        }).catch(err => {
+            res.send({
+                "success": false,
+                "msg": 'Error! Something went wrong. '+err
+            });
+        })
+    }
+})
+// #delete keyword
+router.get('/keyword/delete/:id', (req, res) => {
+    if(req.params.id) {
+        Keyword.destroy({
+                where: {
+                    Id: req.params.id
+                }   
+            }).then(record => {
+            console.log(record);
+            res.send({
+                "success": true,
+                "msg": "Record has been deleted successfully."
+            });
+        }).catch(err => {
+            res.send({
+                "success": false,
+                "msg": 'Error! Something went wrong. '+err
+            });
+        })
+    }
+})
 
 module.exports = router;

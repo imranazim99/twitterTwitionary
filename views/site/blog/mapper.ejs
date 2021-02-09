@@ -19,7 +19,7 @@
     
                 <!--------Tweet Mapper Search-->
                 <div class="row">
-                    <div class="col-md-12 align-items-center">
+                    <div class="col-md-12 align-items-center mb-2">
                         <h5>Enter a Twitter user name to view all their tweets, likes, followers or timeline</h5>
                     </div>
                 </div>
@@ -246,14 +246,10 @@
                                         '<p class="card-text">'+data.dataArr[i].text+
                                         '</p>'+
                                     '</div>'+'</div>')
-                                }
-                                $(".preloader").fadeOut();
-                                window.scrollTo({
-                                    top: 370,
-                                    behavior: 'smooth'
-                                });
+                                } 
                             } else {
                                 // code
+                                $(".preloader").fadeOut();
                                 $("#tweetsArr").append('<div class="card">'+
                                 '<div class="card-body collapse show">'+
                                     '<p class="card-text">'+data.message+'<span>'+'.'+'</span>'+
@@ -261,6 +257,11 @@
                                     '</p>'+
                                 '</div>'+'</div>')
                             }
+                            $(".preloader").fadeOut();
+                            window.scrollTo({
+                                top: 370,
+                                behavior: 'smooth'
+                            });
                         },
                         error: function (xhr, errmsg, err) { 
                             $(".preloader").fadeOut();
