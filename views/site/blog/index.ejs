@@ -69,60 +69,36 @@
                 <!-------Tweets Meter------>
     
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 col-sm-4 col-xs-4 col-lg-4">
+                                    <div class="col-md-3 col-sm-3 col-xs-3 col-lg-3">
                                         <h5>Tweets</h5>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-xs-4 col-lg-4">
+                                    <div class="col-md-3 col-sm-3 col-xs-3 col-lg-3">
                                         <h5>Retweets</h5>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-xs-4 col-lg-4">
-                                        <h5>Location</h5>
+                                    <div class="col-md-3 col-sm-3 col-xs-3 col-lg-3">
+                                        <h5>Locations</h5>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 col-sm-4 col-xs-4 col-lg-4">
-                                        <h5 id="totalTweets"></h5>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5 id="total_retweets"></h5>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5 id="tweets_location"></h5>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5>Tweets</h5>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
+                                    <div class="col-md-3 col-sm-3 col-lg-3 col-xs-3">
                                         <h5>Impressions</h5>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5>Location</h5>
-                                    </div>
-    
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5 id="totalTweets1"></h5>
+                                    <div class="col-md-3 col-sm-3 col-xs-3 col-lg-3">
+                                        <h5 id="totalTweets"></h5>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5 id="total_followers1"></h5>
+                                    <div class="col-md-3 col-sm-3 col-lg-3 col-xs-3">
+                                        <h5 id="total_retweets"></h5>
                                     </div>
-                                    <div class="col-md-4 col-sm-4 col-lg-4 col-xs-4">
-                                        <h5 id="tweets_location1"></h5>
+                                    <div class="col-md-3 col-sm-3 col-lg-3 col-xs-3">
+                                        <h5 id="tweets_location"></h5>
                                     </div>
-    
+                                    <div class="col-md-3 col-sm-3 col-lg-3 col-xs-3">
+                                        <h5 id="impressions"></h5>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -168,15 +144,15 @@
 
                 <div class="row">
                     <div class="col-sm-12">
-                        <div class="card py-3">
+                        <div class="card">
                             <div class="card-header">Twitter Feed</div>
-                            <div class="card-body grid" data-masonry='{ "itemSelector": ".grid-item", "columnWidth": 360, "gutter":20 }' id="urlpost">
-                                <div class="row grid-item">
+                            <div class="card-body tweets" data-masonry='{ "itemSelector": ".tweet-item" }' id="urlpost">
+                                <div class="row tweet-item">
                                     <!-- tweets will append here -->
                                 </div>
                             </div>
                             <!-- On scroll loading spinner -->
-                            <div class="d-flex justify-content-center">
+                            <div class="d-flex justify-content-center py-5">
                                 <div class="spinner-border text-info" role="status" id="load-spinner" style="display: none;">
                                   <span class="sr-only">Loading...</span>
                                 </div>
@@ -219,32 +195,162 @@
         // When widget is ready, run masonry
        twttr.ready(function (twttr) {
             twttr.events.bind('loaded', function (event) {
-                $('.grid').masonry({
-                    itemSelector: '.grid-item'
+                $('.tweets').masonry({
+                    itemSelector: '.tweet-item'
                 });
             });
         });
 
-    // append tweets
-        function appendTweetsWidgets(data) {
-            if(data && data.length > 0) {
-                var urlpost = $('#urlpost');
-                var html = "";
-                // lastId = data[data.length - 1];
-    
-                for (var i = 0; i < data.length; i++) {                       
-    
-                    html = $('.grid-item').append('<div class ="col-sm-4"><a href="' + data[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data[i].username + '</a>' +
-                    '<blockquote class="twitter-tweet spinner-border text-info" id="'+data[i].tweetId+'"><a href=' + data[i].urll + '></a></blockquote></div>');
-    
-                    html.appendTo(urlpost);
-                    // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
-                }
-                twttr.widgets.load(document.getElementById('urlpost'));
+        $("form").on("submit", function(e) {
+            e.preventDefault();
+            var search = $("#searchwords").val();
+            var checkbox = 'database';
+            if ($('input[id="realtime"]').is(':checked')) {
+                checkbox = 'realtime';
             }
-        }
-    // ./append tweets
+            // load data
+            countsDataLoad(search, checkbox);
+            getChartsData(search, checkbox);
+            getTweets(search, checkbox);
+        });
 
+        // counts data load i.e. totalTweets, locations, retweets, etc
+        function countsDataLoad(search, checkbox) {
+            $(".preloader").fadeIn();
+            $.ajax({
+                url: "/blog/tweets/count-data",
+                type: 'POST',
+                data: {
+                    search: search,
+                    checkbox: checkbox
+                },
+                success: function (data) {
+                    if(data.success) {
+                        //START total tweets ,total retweets and total location
+                        $("#totalTweets").text(data.totalTweets)
+                        $("#total_retweets").text(data.retweets)
+                        $("#tweets_location").text(data.tweets_location)
+                        $("#impressions").text(data.total_followers)
+                        //END total tweets ,total retweets and total location
+
+                        drawPieChartForTotalTweets(data);
+                    }
+                    $(".preloader").fadeOut();
+                },
+                error: function (xhr, errmsg, err) { 
+                    $(".preloader").fadeOut();
+                }
+            });
+        }
+
+        function drawPieChartForTotalTweets(data) {
+            var retweets = data.retweets;
+            var totalTweets = data.totalTweets;
+
+            // Build the chart
+            Highcharts.chart('ByType', {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie'
+                },
+                title: {
+                    text: ''
+                },
+                tooltip: {
+                    pointFormat: '{name} <b>{point.percentage:.1f}%</b>'
+                },
+                accessibility: {
+                    point: {
+                        valueSuffix: '%'
+                    }
+                },
+                credits: {
+                    enabled: false
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            distance: -25,
+                            format: '{point.percentage:.1f}%'
+                        },
+                        showInLegend: true
+                    }
+                },
+                series: [{
+                    colorByPoint: true,
+                    data: [
+                        { name: 'Tweets', y: totalTweets },
+                        { name: 'Retweets', y: retweets }
+                    ]
+                }]
+            });
+        }
+
+        // get highcharts data
+        function getChartsData(search, checkbox) {
+            $(".preloader").fadeIn();
+            $.ajax({
+                url: "/blog/tweets/chart-data",
+                type: 'POST',
+                data: {
+                    search: search,
+                    checkbox: checkbox
+                },
+                success: function (data) {
+                    if(data.success) {
+                        drawCharts(data);
+                    }
+                    $(".preloader").fadeOut();
+                },
+                error: function (xhr, errmsg, err) { 
+                    $(".preloader").fadeOut();
+                }
+            });
+        }
+        
+
+        // get tweets
+        function getTweets(search, checkbox) {
+            $(".preloader").fadeIn();
+            $.ajax({
+                url: "/blog/tweets/search",
+                type: 'POST',
+                data: {
+                    search: search,
+                    checkbox: checkbox
+                },
+                success: function (data) {
+                    if(data.success) {
+                        // set values for load more data
+                        checkbox == 'database' ? $("#startdb").val(data.startdb):$("#next_result").val(data.next_result);
+                        $('.tweet-item').empty();
+                        var urlpost = $('#urlpost');
+                        var html = "";
+            
+                        for (var i = 0; i < data.posts.length; i++) {                       
+            
+                            html = $('.tweet-item').append('<div class ="col-sm-4"><a href="' + data.posts[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data.posts[i].username + '</a>' +
+                            '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].urll + '></a></blockquote></div>');
+            
+                            html.appendTo(urlpost);
+                            // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
+                        }
+                        twttr.widgets.load(document.getElementById('urlpost'));
+                    }
+                    $(".preloader").fadeOut();
+                },
+                error: function (xhr, errmsg, err) { 
+                    $(".preloader").fadeOut();
+                }
+            })
+        }
+    // ./get tweets
+    
     // draw charts
     function drawCharts(data) {
         var greate = data.great;
@@ -261,74 +367,10 @@
                 type: 'pie'
             },
             title: {
-                text: 'Sentiments'
-            },
-            tooltip: {
-                pointFormat: '{name} <b>{point.percentage:.1f}%</b>'
-            },
-            accessibility: {
-                point: {
-                    valueSuffix: '%'
-                }
-            },
-            credits: {
-                enabled: false
-            },
-            plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: false
-                    },
-                    showInLegend: true
-                }
-            },
-            legend: {
-                align: 'right',
-                verticalAlign: 'top',
-                layout: 'vertical',
-                x: 0,
-                y: 100
-            },
-            series: [{
-                name: '',
-                data: [{
-                    name: 'Great',
-                    y: greate,
-                    sliced: false,
-                    selected: true,
-                }, {
-                    name: 'Good',
-                    y: good
-                }, {
-                    name: 'Neutral',
-                    y: nuetral
-                }, {
-                    name: 'Bad',
-                    y: bad
-                }, {
-                    name: 'Terrible',
-                    y: terrible
-                }]
-            }]
-        });
-        var retweets = data.retweets;
-        var totalTweets = data.totalTweets;
-
-        // Build the chart
-        Highcharts.chart('ByType', {
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie'
-            },
-            title: {
                 text: ''
             },
             tooltip: {
-                pointFormat: '{name} <b>{point.percentage:.1f}%</b>'
+                pointFormat: '{name} <b>{point.percentage:.0f}%</b>'
             },
             accessibility: {
                 point: {
@@ -340,42 +382,34 @@
             },
             plotOptions: {
                 pie: {
-                    allowPointSelect: true,
+                    allowPointSelect: false,
                     cursor: 'pointer',
                     dataLabels: {
-                        enabled: false
+                        enabled: true,
+                        distance: -25,
+                        format: '{point.percentage:.0f}%'
                     },
                     showInLegend: true
                 }
             },
-            legend: {
-                align: 'right',
-                verticalAlign: 'top',
-                layout: 'vertical',
-                x: 0,
-                y: 100
-            },
             series: [{
-                name: '',
                 colorByPoint: true,
-                data: [{
-                    name: 'Tweets',
-                    y: totalTweets,
-                    sliced: false,
-                    selected: true
-                }, {
-                    name: 'Retweets',
-                    y: retweets
-                }
+                data: [
+                    { name: 'Great', y: greate },
+                    { name: 'Good', y: good },
+                    { name: 'Neutral', y: nuetral }, 
+                    { name: 'Bad', y: bad }, 
+                    { name: 'Terrible', y: terrible }
                 ]
             }]
         });
-        var mydict = data.coutdate;
+        
+        var mydict = data.countDates;
         let tweetsArray = [];
 
         let bydateArr = [];
         for (const tweets of mydict) {
-            tweetsArray.push([tweets.bydate, tweets.couttweets]);
+            tweetsArray.push([tweets.bydate, tweets.countTweets]);
             bydateArr.push(tweets.bydate)
         }
 
@@ -417,43 +451,6 @@
 
         });
     }
-    // submit search form
-    $("#frm").submit(function () {
-        $(".preloader").fadeIn();
-        var search = $("#searchwords").val();
-        var checkbox = 'database';
-        if ($('input[id="realtime"]').is(':checked')) {
-            checkbox = 'realtime';
-        }
-        $.ajax({
-            url: "/blog/tweets/search",
-            type: 'POST',
-            data: {
-                search: search,
-                checkbox: checkbox
-            },
-            success: function (data) {
-                checkbox == 'database' ? $("#startdb").val(data.startdb):$("#next_result").val(data.next_result);
-
-                $('.grid-item').empty();
-                //START total tweets ,total retweets and total location
-                $("#totalTweets").text(data.totalTweets)
-                $("#total_retweets").text(data.retweets)
-                $("#tweets_location").text(data.tweets_location)
-                $("#totalTweets1").text(data.totalTweets)
-                $("#total_followers1").text(data.total_followers)
-                $("#tweets_location1").text(data.tweets_location)
-                //END total tweets ,total retweets and total location
-                drawCharts(data);
-                appendTweetsWidgets(data.posts);
-                $(".preloader").fadeOut();
-            },
-            error: function (xhr, errmsg, err) { 
-                $(".preloader").fadeOut();
-            }
-        })
-        return false;
-    });
 
     // Load more data on scrole
     $(document).ready(function() {
@@ -481,20 +478,19 @@
                         },
                         success: function (data) {
                             if(data && data.posts.length > 0) {
-                                
                                 checkbox == 'database' ? $("#startdb").val(data.startdb):$("#next_result").val(data.next_result);
-
-                                //START total tweets ,total retweets and total location
-
-                                $("#totalTweets").text(data.totalTweets);
-                                $("#total_retweets").text(data.retweets)
-                                $("#tweets_location").text(data.tweets_location)
-                                $("#totalTweets1").text(data.totalTweets)
-                                $("#total_followers1").text(data.total_followers)
-                                $("#tweets_location1").text(data.tweets_location)
-                                // //END total tweets ,total retweets and total location
-                                // drawCharts(data);
-                                appendTweetsWidgets(data.posts);
+                                // append new tweets widgets
+                                var urlpost = $('#urlpost');
+                                var html = "";
+                                for (var i = 0; i < data.posts.length; i++) {                       
+                    
+                                    html = $('.tweet-item').append('<div class ="col-sm-4"><a href="' + data.posts[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data.posts[i].username + '</a>' +
+                                    '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].urll + '></a></blockquote></div>');
+                    
+                                    html.appendTo(urlpost);
+                                    // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
+                                }
+                                twttr.widgets.load(document.getElementById('urlpost'));
                             }
                             $("#load-spinner").css("display","none");
                             setTimeout(function() {

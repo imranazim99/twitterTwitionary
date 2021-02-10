@@ -34,22 +34,72 @@ router.get('/search', (req, res) => {
     });
 })
 
-// #get values from db and twitter
-router.post('/tweets/search', async (req, res) => {
+
+// get counts data load
+router.post('/tweets/count-data', async (req, res) => {
     let checkBox = req.body.checkbox;
     let searchKey = req.body.search;
-    let postArr = [];
-    var greatCounter = 0; var goodCounter = 0; var neutralCounter = 0; var badCounter = 0; var terribleCounter = 0;
-    let countDateArr = [];
     var count_username = 0; var tweets_count = 0; var tweets_location = 0; var retweets_count = 0; var total_tweets = 0; var total_followers = 0;
 
     if(checkBox == 'database') {
-        let startdb = 0;
-        if(req.body.startdb) {
-            startdb = req.body.startdb;
-        }
-        console.log('dtstart: ', startdb)
-        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id LIMIT '+startdb+', 6';
+        // count all tweets
+        var sql = 'select COUNT(distinct Username) as totalUsername,COUNT(a.Id) as totalId,COUNT(distinct location) as totalLocation,SUM(retweetcount) as totalRetweet,COUNT(totaltweets) as totalTweets,sum(followers) as totalFollowers from tbl_twitter a JOIN tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" ORDER BY a.Id';
+        var totalCounts = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+
+        totalCounts.forEach(tweet => {
+            count_username  = tweet.totalUsername;
+            tweets_count    = tweet.totalId;
+            tweets_location = tweet.totalLocation;
+            retweets_count  = tweet.totalRetweet;
+            total_tweets    = tweet.totalTweets;
+            total_followers = tweet.totalFollowers;
+        });
+        res.send({
+            'success':          true,
+            'count_username':   count_username, 
+            'tweets_count':     tweets_count,
+            'tweets_location':  tweets_location,
+            'retweets':         retweets_count,
+            'totalTweets':      total_tweets,
+            'total_followers':  total_followers
+        });
+    } else {
+        T.get('search/tweets', { q: searchKey, count: 100 }, async function(err, data, response) {
+            console.log('count data: ', data)
+            var result = data.statuses;
+            result.forEach(item => {
+                tweets_count += item.user.statuses_count;
+
+                if(item.user.location) {
+                    tweets_location += 1;
+                }
+                
+                retweets_count  += item.retweet_count;
+                total_tweets    += item.user.statuses_count;
+                total_followers += item.user.followers_count;
+            })
+
+            res.send({ 
+                'success':          true,
+                'tweets_count':     tweets_count,
+                'tweets_location':  tweets_location,
+                'retweets':         retweets_count,
+                'totalTweets':      total_tweets,
+                'total_followers':  total_followers
+            });
+        })
+    }
+
+})
+
+// get chart data
+router.post('/tweets/chart-data', async (req, res) => {
+    let checkBox = req.body.checkbox;
+    let searchKey = req.body.search;
+    var greatCounter = 0; var goodCounter = 0; var neutralCounter = 0; var badCounter = 0; var terribleCounter = 0;
+    let countDateArr = [];
+    if(checkBox == 'database') {
+        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id';
 
         var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
             // console.log('dataa: ', result);
@@ -72,82 +122,34 @@ router.post('/tweets/search', async (req, res) => {
                         terribleCounter += 1;
                         break;
                 }
-                postArr.push({
-                    'Id'            : item.id,
-                    'tweetId'       : item.id,
-                    'text'          : item.text,
-                    'username'      : item.Username,
-                    'dated'         : item.tweetcreatedts,
-                    'retweetcount'  : item.retweetcount,
-                    'location'      : item.location,
-                    'urll'          : item.links,
-                    'blogUrl'       : "/blog/mapper?search="+item.Username,
-                    'description'   : item.acctdesc,
-                    'following'     : item.following,
-                    'followers'     : item.followers,
-                    'sentiment'     : checkText
-                });
-            })
-            // #end foreach
-            // count all tweets
-            var sql2 = 'select COUNT(distinct Username) as totalUsername,COUNT(a.Id) as totalId,COUNT(distinct location) as totalLocation,SUM(retweetcount) as totalRetweet,COUNT(totaltweets) as totalTweets,sum(followers) as totalFollowers from tbl_twitter a JOIN tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" ORDER BY a.Id';
-            var tweetsCount = await Tweets.sequelize.query(sql2, { type: QueryTypes.SELECT });
+            });
 
-            tweetsCount.forEach(tweet => {
-                count_username  = tweet.totalUsername;
-                tweets_count    = tweet.totalId;
-                tweets_location = tweet.totalLocation;
-                retweets_count  = tweet.totalRetweet;
-                total_tweets    = tweet.totalTweets;
-                total_followers = tweet.totalFollowers;
-            })
-
-            // count tweets by date
-            var sql3 = 'select count(a.id) as totalId, date(tweetcreatedts) as date FROM twitter.tbl_twitter a JOIN twitter.tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" group by date(tweetcreatedts)';
-            var tweetsByDate = await Tweets.sequelize.query(sql3, { type: QueryTypes.SELECT });
+            // count tweets by date for linear chart
+            var sql2 = 'select count(a.id) as totalId, date(tweetcreatedts) as date FROM twitter.tbl_twitter a JOIN twitter.tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" group by date(tweetcreatedts)';
+            var tweetsByDate = await Tweets.sequelize.query(sql2, { type: QueryTypes.SELECT });
 
             tweetsByDate.forEach(tweetByDt => {
                 var dt = tweetByDt.date;
                 const formatedDate = dateFormat(dt, "mm/dd/yyyy");
                 countDateArr.push({
-                    'couttweets'    : tweetByDt.totalId,
+                    'countTweets'    : tweetByDt.totalId,
                     'bydate'        : formatedDate
                 });
             })
-        res.send({
-            'posts':            postArr,
-            'coutdate':         countDateArr,
-            'tweets_count':     tweets_count,
-            'count_username':   count_username, 
-            'tweets_location':  tweets_location,
-            'great':            greatCounter,
-            'good':             goodCounter,
-            'nutral':           neutralCounter,
-            'bad':              badCounter,
-            'terr':             terribleCounter,
-            'retweets':         retweets_count,
-            'totalTweets':      total_tweets,
-            'total_followers':  total_followers,
-            'startdb':          Number(startdb)+6
-        });
 
+            res.send({
+                'success':          true,
+                'great':            greatCounter,
+                'good':             goodCounter,
+                'nutral':           neutralCounter,
+                'bad':              badCounter,
+                'terr':             terribleCounter,
+                'countDates':       countDateArr
+            });
     } else {
-        // realtime data from twitter api
-        let maxId = '';
-        if(req.body.next_result) {
-            maxId = req.body.next_result;
-        }
-        T.get('search/tweets', { q: searchKey, count: 6, max_id: maxId }, async function(err, data, response) {
-            // console.log('twit data: ', data.search_metadata)
-            if(data.search_metadata.next_results != null) {
-                resultsExist = data.search_metadata.next_results;
-                isEqualsToLocation = resultsExist.indexOf('=');
-                andLocation = resultsExist.indexOf('&');
-                maxId = resultsExist.substring(isEqualsToLocation+1,andLocation);
-                // console.log('maxId', maxId)
-            }
-
+        T.get('search/tweets', { q: searchKey, count: 100 }, async function(err, data, response) {
             var result = data.statuses;
+            let total_tweets = 0;
             result.forEach(item => {
                 // console.log('dataa: ', item);
                 var checkText = sentimentAnalysis(item.text);
@@ -170,57 +172,98 @@ router.post('/tweets/search', async (req, res) => {
                     default: 
                     console.log('Unknown value.');
                 }
-                postArr.push({
-                    'Id'            : item.user.id,
-                    'tweetId'       : item.id,
-                    'text'          : item.text,
-                    'username'      : item.user.screen_name,
-                    'retweetcount'  : item.retweet_count,
-                    'location'      : item.user.location,
-                    'urll'          : "https://twitter.com/user/status/"+item.id_str,
-                    'blogUrl'       : "/blog/mapper?search="+item.user.screen_name,
-                    'description'   : item.user.description,
-                    'following'     : item.user.friends_count,
-                    'followers'     : item.user.followers_count,
-                    'sentiment'     : checkText
-                });
-                
-                // count_username  += tweet.totalUsername;
-                tweets_count += item.user.statuses_count;
-
-                if(item.user.location) {
-                    tweets_location += 1;
-                }
-                
-                retweets_count  += item.retweet_count;
-                total_tweets    += item.user.statuses_count;
-                total_followers += item.user.followers_count;
-
+                total_tweets += item.user.statuses_count;
             })
-            // #end foreach
-
-            // for tweets chart
+            // for tweets linear chart
             var dt = new Date();
             const formatedDate = dateFormat(dt, "mm/dd/yyyy");
                 countDateArr.push({
-                    'couttweets'    : total_tweets,
+                    'countTweets'    : total_tweets,
                     'bydate'        : formatedDate
                 });
-            
             res.send({
-                'posts':            postArr,
-                'coutdate':         countDateArr,
-                'tweets_count':     tweets_count,
-                'count_username':   count_username, 
-                'tweets_location':  tweets_location,
+                'success':          true, 
                 'great':            greatCounter,
                 'good':             goodCounter,
                 'nutral':           neutralCounter,
                 'bad':              badCounter,
                 'terr':             terribleCounter,
-                'retweets':         retweets_count,
-                'totalTweets':      total_tweets,
-                'total_followers':  total_followers,
+                'countDates':       countDateArr,
+            });
+        })
+    }
+})
+
+// 
+
+
+
+// #get values from db and twitter
+router.post('/tweets/search', async (req, res) => {
+    let checkBox = req.body.checkbox;
+    let searchKey = req.body.search;
+    let postArr = [];
+
+    if(checkBox == 'database') {
+        let startdb = 0;
+        if(req.body.startdb) {
+            startdb = req.body.startdb;
+        }
+        // console.log('dtstart: ', startdb)
+        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id LIMIT '+startdb+', 6';
+
+        var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+            // console.log('dataa: ', result);
+            result.forEach(item => {
+                
+                postArr.push({
+                    'Id'            : item.id,
+                    'tweetId'       : item.id,
+                    'username'      : item.Username,
+                    'urll'          : item.links,
+                    'blogUrl'       : "/blog/mapper?search="+item.Username,
+                    'description'   : item.acctdesc
+                });
+            })
+            // #end foreach
+            console.log('posts: ', postArr)
+        res.send({
+            'success':          true,
+            'posts':            postArr,
+            'startdb':          Number(startdb)+6
+        });
+
+    } else {
+        // realtime data from twitter api
+        let maxId = '';
+        if(req.body.next_result) {
+            maxId = req.body.next_result;
+        }
+        T.get('search/tweets', { q: searchKey, count: 6, max_id: maxId }, async function(err, data, response) {
+            // console.log('twit data: ', data.search_metadata)
+            if(data.search_metadata.next_results != null) {
+                resultsExist = data.search_metadata.next_results;
+                isEqualsToLocation = resultsExist.indexOf('=');
+                andLocation = resultsExist.indexOf('&');
+                maxId = resultsExist.substring(isEqualsToLocation+1,andLocation);
+                // console.log('maxId', maxId)
+            }
+
+            var result = data.statuses;
+            result.forEach(item => {
+                postArr.push({
+                    'Id'            : item.user.id,
+                    'tweetId'       : item.id,
+                    'username'      : item.user.screen_name,
+                    'urll'          : "https://twitter.com/user/status/"+item.id_str,
+                    'blogUrl'       : "/blog/mapper?search="+item.user.screen_name,
+                    'description'   : item.user.description
+                });
+            })
+
+            res.send({
+                'success':          true,
+                'posts':            postArr,
                 'next_result':      maxId
             });
         })
