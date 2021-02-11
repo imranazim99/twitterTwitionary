@@ -31,7 +31,7 @@
                                     <h4 class="card-title">Search From Twitter</h4>
 
                                     <div class="form-group" style="width: 100%; display: flex;">
-                                        <input type="text" class="form-control" required name="search" id="search" placeholder="Enter user" value="<%= search %>">
+                                        <input type="text" class="form-control" required name="search" id="search" placeholder="Enter twitter username without spaces" value="<%= search %>">
                                         <button type="submit" id="searchBtn" class="btn btn-success" disabled>OK</button>
                                     </div>
                                     <div>
@@ -58,8 +58,7 @@
                 <div class="row mb-1">
                     <div class="col-md-7">
                         <div class="card">
-    
-                            <h1 class="py-2 px-2">All My Tweets</h1>
+                            <h1 class="px-2">All My Tweets</h1>
     
                             <div class="card-body">
                                 <button type="button" id="btntweets" name="action" value="tweets"
@@ -67,7 +66,7 @@
                                 <button type="button" id="btnfollowers" name="action" value="followers"
                                     class="btn btn-primary ml-2">Followers Details <i class="fa fa-level-down-alt"></i></button>
                                 <button type="button" id="btnfollowing" class="btn btn-primary ml-2" name="action"
-                                    value="following">Following Details <i class="fa fa-level-down-alt"></i></button>
+                                    value="following">Followings Details <i class="fa fa-level-down-alt"></i></button>
                             </div>
                         </div>
                     </div>
@@ -75,7 +74,7 @@
                 <!--------Tweet Mapper Search-->
     
                 <!-------All Tweets Section -->
-    
+                
                 <div class="row" id="tweets">
                     <div class="col-md-12">
                         <h4>All My Tweets</h4>
@@ -236,17 +235,20 @@
                             $("#followersArr").empty();
                             $("#followingsArr").empty();
                             if(data.success) {
+                                let lastRecordId = data.dataArr[data.dataArr.length - 1].id_str;
+                                let tweetsHtml = '';
                                 for(var i = 0; i < data.dataArr.length; i++)
                                 {
                                     let dt = getFormatedDate('datetime',data.dataArr[i].created_at);
 
-                                    $("#tweetsArr").append('<div class="card mb-1">'+
-                                    '<div class="card-body collapse show">'+
-                                        '<date class="text-muted">'+dt+'</date>'+
-                                        '<p class="card-text">'+data.dataArr[i].text+
-                                        '</p>'+
-                                    '</div>'+'</div>')
-                                } 
+                                    tweetsHtml += '<div class="card mb-1">'+
+                                                    '<div class="card-body collapse show">'+
+                                                        '<date class="text-muted">'+dt+'</date>'+
+                                                        '<p class="card-text">'+data.dataArr[i].text+
+                                                        '</p>'+
+                                                    '</div>'+'</div>';
+                                }
+                                $("#tweetsArr").append(tweetsHtml+'<div class="card text-info" id="oldLastId"><button class="btn btn-block" type="button" id="loadMoreTweets" onclick="loadMoreTweets('+lastRecordId+')">Load More Tweets</button></div>');
                             } else {
                                 // code
                                 $(".preloader").fadeOut();
@@ -292,9 +294,11 @@
                             $("#followingsArr").empty();
                             
                             if(data.success) {
+                                let nextCursor = data.nextCursor;
+                                let followersHtml = '';
                                 for(var i=0; i < data.dataArr.length; i++)
                                 {
-                                $("#followersArr").append('<div class="card mb-1">'+
+                                followersHtml += '<div class="card mb-1">'+
                                     '<div class="card-body" style="display: flex;">'+
                                         '<p class="card-text">'+
                                             '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
@@ -304,8 +308,13 @@
                                             '<i class="fa fa-map"></i> '+data.dataArr[i].location+
                                         '</p>'+
                                     '</div>'+
-                                '</div>');
+                                '</div>';
                                 }
+                                let followerLoadMoreBtn = '<div class="card text-info" id="lastFollowerId"><button class="btn btn-block" type="button" id="loadMoreFollowers" onclick="loadMoreFollowers('+nextCursor+')">Load More Followers</button></div>';
+                                if(data.dataArr.length < 20) {
+                                    followerLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                                }
+                                $("#followersArr").append(followersHtml+followerLoadMoreBtn);
                             } else {
                                 $("#followersArr").append('<div class="card">'+
                                     '<div class="card-body" style="display: flex;">'+
@@ -339,7 +348,7 @@
                         type: "POST",
                         data: {
                             search: search,
-                            q_search: 'following'
+                            q_search: 'followings'
                         },
                         success: function (data) {
                             $("#tweets").hide();
@@ -349,9 +358,11 @@
                             $("#followersArr").empty();
                             $("#followingsArr").empty();
                             if(data.success) {
+                                let nextCursor = data.nextCursor;
+                                let followingsHtml = '';
                                 for(var i = 0; i < data.dataArr.length; i++)
                                 {
-                                $("#followingsArr").append('<div class="card mb-1">'+
+                                followingsHtml += '<div class="card mb-1">'+
                                     '<div class="card-body" style="display: flex;">'+
                                         '<p class="card-text">'+
                                             '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
@@ -361,14 +372,18 @@
                                             '<i class="fa fa-map"></i> '+data.dataArr[i].location+
                                         '</p>'+
                                     '</div>'+
-                                '</div>');
+                                '</div>';
                                 }
-
+                                let followingLoadMoreBtn = '<div class="card text-info" id="lastFollowingId"><button class="btn btn-block" type="button" id="loadMoreFollowings" onclick="loadMoreFollowings('+nextCursor+')">Load More Followings</button></div>';
+                                if(data.dataArr.length < 20) {
+                                    followingLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                                }
+                                $("#followingsArr").append(followingsHtml+followingLoadMoreBtn);
                             } else {
                                 $("#followingsArr").append('<div class="card">'+
                                     '<div class="card-body" style="display: flex;">'+
                                         '<p class="card-text">'+
-                                            data.message
+                                            data.errorMsg
                                         +'</p>'+
                                     '</div>'+
                                 '</div>');
@@ -390,6 +405,164 @@
            
 
         });
+
+        function loadMoreTweets(lastId) {
+            var search = $("#search").val();
+            if(search != '') {
+                $("#oldLastId").html('<button class="btn btn-block" type="button">Loading...</button>');
+                $.ajax({
+                        url: '/blog/mapper/user/load-more',
+                        type: 'POST',
+                        data: {
+                            search: search,
+                            q_search: 'tweets',
+                            lastId: lastId
+                        },
+                        success: function (data) {
+                            $("#oldLastId").remove();
+                            if(data.success) {
+                                let lastRecordId = data.dataArr[data.dataArr.length - 1].id_str;
+                                let tweetsHtml = '';
+                                for(var i = 0; i < data.dataArr.length; i++)
+                                {
+                                    let dt = getFormatedDate('datetime',data.dataArr[i].created_at);
+
+                                    tweetsHtml += '<div class="card mb-1">'+
+                                                    '<div class="card-body collapse show">'+
+                                                        '<date class="text-muted">'+dt+'</date>'+
+                                                        '<p class="card-text">'+data.dataArr[i].text+
+                                                        '</p>'+
+                                                    '</div>'+'</div>';
+                                }
+                                let loadMoreBtn = '<div class="card text-info" id="oldLastId"><button class="btn btn-block" type="button" id="loadMoreTweets" onclick="loadMoreTweets('+lastRecordId+')">Load More Tweets</button></div>';
+                                if(data.dataArr.length < 20) {
+                                    loadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                                }
+                                $("#tweetsArr").append(tweetsHtml+loadMoreBtn);
+                            } else {
+                                // code
+                                $("#tweetsArr").append('<div class="card">'+
+                                '<div class="card-body collapse show">'+
+                                    '<p class="card-text">'+data.message+'<span>'+'.'+'</span>'+
+                                        '<date><u>------</u></date>'+
+                                    '</p>'+
+                                '</div>'+'</div>')
+                            }
+                        },
+                        error: function (xhr, errmsg, err) { 
+                            $(".preloader").fadeOut();
+                        }
+                    })
+            }
+        }
+
+        // load more followers
+        function loadMoreFollowers(nextCursor) {
+            var search = $("#search").val();
+            if(search != '') {
+                $("#lastFollowerId").html('<button class="btn btn-block" type="button">Loading...</button>');
+                $.ajax({
+                    url: "/blog/mapper/user/load-more",
+                    type: "POST",
+                    data: {
+                        search: search,
+                        q_search: "followers",
+                        nextCursor: nextCursor
+                    },
+                    success: function (data) {
+                        $("#lastFollowerId").remove();                      
+                        if(data.success) {
+                            let nextCursor = data.nextCursor;
+                            let followersHtml = '';
+                            for(var i=0; i < data.dataArr.length; i++)
+                            {
+                            followersHtml += '<div class="card mb-1">'+
+                                '<div class="card-body" style="display: flex;">'+
+                                    '<p class="card-text">'+
+                                        '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
+                                        data.dataArr[i].name+ ' | <i class="fa fa-link" style="font-size: small;"></i> <a href="/blog/mapper?search='+data.dataArr[i].screen_name+'" class="card-link"> @'+data.dataArr[i].screen_name+
+                                        '</a> | '+ data.dataArr[i].followers_count+ ' Followers | '+
+                                        ''+ data.dataArr[i].friends_count + ' Followings | '+
+                                        '<i class="fa fa-map"></i> '+data.dataArr[i].location+
+                                    '</p>'+
+                                '</div>'+
+                            '</div>';
+                            }
+                            let followerLoadMoreBtn = '<div class="card text-info" id="lastFollowerId"><button class="btn btn-block" type="button" id="loadMoreFollowers" onclick="loadMoreFollowers('+nextCursor+')">Load More Followers</button></div>';
+                            if(data.dataArr.length < 20) {
+                                followerLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                            }
+                            $("#followersArr").append(followersHtml+followerLoadMoreBtn);
+                        } else {
+                            $("#followersArr").append('<div class="card">'+
+                                '<div class="card-body" style="display: flex;">'+
+                                    '<p class="card-text">'+
+                                        data.errorMsg
+                                    +'</p>'+
+                                '</div>'+
+                            '</div>');
+                        }
+                    },
+                    error: function (xhr, errmsg, err) {
+                        $(".preloader").fadeOut();
+                    }
+                })
+            }
+        }
+
+        // load more followings
+        function loadMoreFollowings(nextCursor) {
+            var search = $("#search").val();
+            if(search != '') {
+                $("#lastFollowingId").html('<button class="btn btn-block" type="button">Loading...</button>');
+                $.ajax({
+                    url: "/blog/mapper/user/load-more",
+                    type: "POST",
+                    data: {
+                        search: search,
+                        q_search: 'followings',
+                        nextCursor: nextCursor
+                    },
+                    success: function (data) {
+                        $("#lastFollowingId").remove();
+                        if(data.success) {
+                            let nextCursor = data.nextCursor;
+                            let followingsHtml = '';
+                            for(var i = 0; i < data.dataArr.length; i++)
+                            {
+                            followingsHtml += '<div class="card mb-1">'+
+                                '<div class="card-body" style="display: flex;">'+
+                                    '<p class="card-text">'+
+                                        '<img src='+data.dataArr[i].profile_image_url+' alt="favicon.png" style="border-radius: 10px;"/> '+
+                                        data.dataArr[i].name+ ' | <i class="fa fa-link" style="font-size: small;"></i> <a href="/blog/mapper?search='+data.dataArr[i].screen_name+'" class="card-link"> @'+data.dataArr[i].screen_name+
+                                        '</a> | '+ data.dataArr[i].followers_count+ ' Followers | '+
+                                        ''+ data.dataArr[i].friends_count + ' Followings | '+
+                                        '<i class="fa fa-map"></i> '+data.dataArr[i].location+
+                                    '</p>'+
+                                '</div>'+
+                            '</div>';
+                            }
+                            let followingLoadMoreBtn = '<div class="card text-info" id="lastFollowingId"><button class="btn btn-block" type="button" id="loadMoreFollowings" onclick="loadMoreFollowings('+nextCursor+')">Load More Followings</button></div>';
+                            if(data.dataArr.length < 20) {
+                                followingLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                            }
+                            $("#followingsArr").append(followingsHtml+followingLoadMoreBtn);
+                        } else {
+                            $("#followingsArr").append('<div class="card">'+
+                                '<div class="card-body" style="display: flex;">'+
+                                    '<p class="card-text">'+
+                                        data.errorMsg
+                                    +'</p>'+
+                                '</div>'+
+                            '</div>');
+                        }
+                    },
+                    error: function (xhr, errmsg, err) {
+                        console.log(err);
+                    }
+                })
+            }
+        }
     </script>
 
 </body>

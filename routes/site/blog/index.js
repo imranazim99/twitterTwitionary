@@ -270,25 +270,6 @@ router.post('/tweets/search', async (req, res) => {
     }
 })
 
-// mapper
-router.get('/mapper', (req, res) => {
-    let searchKey = req.query.search;
-    res.render('site/blog/mapper',{
-        successFlash: req.flash('success'),
-        errorFlash: req.flash('error'),
-        title: "Mapper",
-        search: searchKey
-    });
-})
-
-// reports
-router.get('/reports', (req, res) => {
-    res.render('site/blog/reports',{
-        successFlash: req.flash('success'),
-        errorFlash: req.flash('error'),
-        title: "Reports"
-    });
-})
 
 // this is used for sentence analysis
 function sentimentAnalysis(text) {
@@ -313,6 +294,16 @@ function sentimentAnalysis(text) {
 // ===================================
 //          Mapper
 // ===================================
+// mapper
+router.get('/mapper', (req, res) => {
+    let searchKey = req.query.search;
+    res.render('site/blog/mapper',{
+        successFlash: req.flash('success'),
+        errorFlash: req.flash('error'),
+        title: "Mapper",
+        search: searchKey
+    });
+})
 // AJAX call load user details
 router.post('/mapper/load-user-detail', (req, res) => {
     const searchKey = req.body.search;
@@ -341,14 +332,14 @@ router.post('/mapper/load-user-detail', (req, res) => {
             }
         })
     } else if(searchKey && qSearch == "tweets") {
-        T.get('statuses/user_timeline', { screen_name: searchKey, count: 50 }, async function(err, data, response) {
+        T.get('statuses/user_timeline', { screen_name: searchKey, count: 20 }, async function(err, data, response) {
             if(err) {
                 return res.send({
                     "success": false,
                     "message": "Sorry, There were no tweets found for the user "+searchKey
                 });
             } else {
-                // console.log(data)
+                console.log(data)
                 res.send({
                     "success": true,
                     "dataArr": data
@@ -356,8 +347,8 @@ router.post('/mapper/load-user-detail', (req, res) => {
             }
         })
     } else if(searchKey && qSearch == "followers") {
-        T.get('followers/list', { screen_name: searchKey, count: 50 }, async function(err, data, response) {
-            // console.log(err,data)
+        T.get('followers/list', { screen_name: searchKey, count: 20 }, async function(err, data, response) {
+            console.log(err)
             if(err) {
                 return res.send({
                     "success": false,
@@ -366,12 +357,13 @@ router.post('/mapper/load-user-detail', (req, res) => {
             } else {
                 res.send({
                     "success": true,
-                    "dataArr": data.users
+                    "dataArr": data.users,
+                    'nextCursor': data.next_cursor
                 });
             }
         })
-    } else if(searchKey && qSearch == "following") {
-        T.get('friends/list', { screen_name: searchKey, count: 50 }, async function(err, data, response) {
+    } else if(searchKey && qSearch == "followings") {
+        T.get('friends/list', { screen_name: searchKey, count: 20 }, async function(err, data, response) {
             if(err) {
                 return res.send({
                     "success": false,
@@ -380,7 +372,8 @@ router.post('/mapper/load-user-detail', (req, res) => {
             } else {
                 res.send({
                     "success": true,
-                    "dataArr": data.users
+                    "dataArr": data.users,
+                    "nextCursor": data.next_cursor
                 });
             }
         })
@@ -388,6 +381,70 @@ router.post('/mapper/load-user-detail', (req, res) => {
         return res.send({
             "success": false,
             "message": "Please enter correct username and try again, please!"
+        });
+    }
+})
+
+// load more data for a user
+router.post('/mapper/user/load-more', (req, res) => {
+    const searchKey = req.body.search;
+    const qSearch = req.body.q_search;
+    const maxId = req.body.lastId;
+    if(qSearch == 'tweets') {
+        T.get('statuses/user_timeline', { screen_name: searchKey, count: 20, max_id: maxId }, async function(err, data, response) {
+            if(err) {
+                return res.send({
+                    "success": false,
+                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                });
+            } else {
+                // console.log('Id: '+maxId+' == '+data)
+                res.send({
+                    "success": true,
+                    "dataArr": data
+                });
+            }
+        })
+    } else if(qSearch == 'followers') {
+        let nextCursor = req.body.nextCursor;
+        T.get('followers/list', { screen_name: searchKey, count: 20, cursor: nextCursor }, async function(err, data, response) {
+            // console.log('next cursor: ', data)
+            if(err) {
+                return res.send({
+                    "success": false,
+                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                });
+            } else {
+                res.send({
+                    "success": true,
+                    "dataArr": data.users,
+                    'nextCursor': data.next_cursor
+                });
+            }
+        })
+
+    } else if(qSearch == 'followings') {
+        let nextCursor = req.body.nextCursor;
+        T.get('friends/list', { screen_name: searchKey, count: 20, cursor: nextCursor }, async function(err, data, response) {
+            if(err) {
+                return res.send({
+                    "success": false,
+                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                });
+            } else {
+                res.send({
+                    "success": true,
+                    "dataArr": data.users,
+                    "nextCursor": data.next_cursor
+                });
+            }
+        })
+
+    } else {
+        res.send({
+            "success": false,
+            "dataArr": '',
+            "errorMsg": 'Something went wrong!'
         });
     }
 })
@@ -483,5 +540,98 @@ router.get('/keyword/delete/:id', (req, res) => {
         })
     }
 })
+
+/*=============================================
+                Reports
+===============================================*/
+// reports
+router.get('/reports', (req, res) => {
+    res.render('site/blog/reports',{
+        successFlash: req.flash('success'),
+        errorFlash: req.flash('error'),
+        title: "Reports"
+    });
+})
+
+router.post('/tweets/report', async (req, res) => {
+    const fromDate = req.body.fromdate;
+    const toDate = req.body.todate;
+    if(fromDate != '' && toDate != '') {
+        let tweetsArr = [], keywordsArr = [];
+        let sql = 'SELECT COUNT(Id) as totalTweets, DATE(tweetcreatedts) as onDate from tbl_twitter WHERE date(tweetcreatedts) BETWEEN "'+fromDate+'" AND "'+toDate+'" GROUP BY DATE(tweetcreatedts)';
+        var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+        // console.log(result)
+        let allTweets = 0;
+        result.forEach(item => {
+            tweetsArr.push({
+                'totalTweets': item.totalTweets,
+                'onDate': item.onDate
+            });
+            allTweets += item.totalTweets;
+        });
+
+        let sql2 = 'SELECT COUNT(h.Id) as totalKeywords, h.title as title from tbl_hashtags h JOIN tbl_keywords k on h.title = k.Keyword GROUP BY h.title';
+        var result2 = await Hashtag.sequelize.query(sql2, { type: QueryTypes.SELECT });
+        let allKeywords = 0;
+        result2.forEach(item => {
+            keywordsArr.push({
+                'totalKeywords': item.totalKeywords,
+                'title': item.title
+            });
+            allKeywords += item.totalKeywords;
+        });
+
+        res.send({
+            'success': true,
+            'tweetsArr': tweetsArr,
+            'allTweets': allTweets,
+            'keywordsArr': keywordsArr,
+            'allKeywords': allKeywords,
+            'fromDate': fromDate,
+            'toDate': toDate
+        })
+    } else {
+        res.send({
+            'success': false,
+            'msg': 'Select to and from date and try again please.',
+            'fromDate': fromDate,
+            'toDate': toDate
+        })
+    }
+})
+
+/*
+ todate = str(request.POST.get('todate'))
+    if todate==None or todate=='None' :
+        return render(request, 'blog/reports.html')
+    else:
+        print('not none')
+        posts=[]
+        counter = 0
+        datecount = 0
+        todate = str(request.POST.get('todate'))
+        fromdate = str(request.POST.get('fromdate'))
+        tweets_countq_query="SELECT COUNT(Id),date(tweetcreatedts) from tbl_twitter WHERE date(tweetcreatedts) BETWEEN " '%s' " and " '%s' " GROUP BY date(tweetcreatedts)"
+        cursor.execute(tweets_countq_query,(todate,fromdate))
+        coutdate=[]
+        for count_date_row in cursor:
+                        coutdate.append({
+                            'couttweets': count_date_row[0],
+                            'bydate':count_date_row[1].strftime('%m/%d/%Y')
+                            })
+                        datecount+=count_date_row[0]
+        mydb.commit()
+        sqlite_select_query = """SELECT COUNT(h.Id),title from tbl_hashtags h JOIN tbl_keywords k on h.title=k.Keywords GROUP BY Title"""
+        cursor.execute(sqlite_select_query)
+        for row in cursor:
+                posts.append({
+                    'count': row[0],
+                    'title': row[1]})
+                counter+=row[0]
+        posts={
+            'posts': posts,'counter':counter,'coutdate':coutdate,'todate':todate,'fromdate':fromdate,'datecount':datecount
+        }
+
+*/
 
 module.exports = router;

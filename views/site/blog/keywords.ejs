@@ -44,8 +44,8 @@
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">Keywords List</h4>
-                                <div class="table-responsive">
-                                    <table id="keywords_table" class="table no-wrap">
+                                <div class="table table-sm table-responsive">
+                                    <table id="keywords_table" class="table">
                                         <thead>
                                             <tr>
                                                 <th hidden>Id</th>
@@ -193,12 +193,14 @@
                 success: function(data){
                     $(".preloader").fadeOut();
                     if(data.success) {
+                        let tbody = '';
                         var index = 1;
                         data.dataArr.forEach((element) => {
     
-                        $("#keywords_table tbody").append('<tr style="color:#000;"><td style="display:none">' + index + '</td><td>' + index+ '</td><td>' + element.Keyword + '</td><td><a onclick="EditFun(this)" class="btn delete-company" style="cursor: pointer;"><i class="fa fa-edit"></i> </a><a onclick="Remove(this)" class="btn" style="cursor: pointer;"><i class="fa fa-trash"></i></a></td></tr>');
+                        tbody += '<tr style="color:#000;"><td style="display:none">' + index + '</td><td>' + index+ '</td><td>' + element.Keyword + '</td><td><button onclick="EditFun(this)" class="btn btn-info btn-sm delete-company" title="Edit '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-edit"></i> </button>&nbsp;<button onclick="Remove(this)" class="btn btn-danger btn-sm" title="Delete '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-trash"></i></button></td></tr>';
                             index++
                         });
+                        $("#keywords_table tbody").append(tbody);
                         $('#keywords_table').DataTable();
                     }
                 },

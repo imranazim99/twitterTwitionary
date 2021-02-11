@@ -18,7 +18,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-12 mb-3 align-items-center">
-                        <h5>Enter a To Date And From Date To Search Tweets By Date:</h5>
+                        <h5 class="card-title">Enter a To Date And From Date To Search Tweets By Date.</h5>
                     </div>
                 </div>
     
@@ -30,20 +30,18 @@
                                 <form id="formsubmit">
                                     <div class="row">
                                         <div class="col-md-5">
-                                            <h4 class="card-title">To Date</h4>
+                                            <label for="fromDate" class="card-title">From Date</label>
                                             <div class="form-group">
-                                                <input type="date" id="todate" required class="form-control">
+                                                <input type="text" id="fromDate" name="fromDate" required class="form-control" placeholder="select from date" autocomplete="off">
                                             </div>
                                         </div>
                                         <div class="col-md-5">
-                                            <h4 class="card-title">From Date Date</h4>
-                                            <div class="form-group">
-                                                <input type="date" id="fromdate" required class="form-control">
+                                            <label for="toDate" class="card-title">To Date</label>
+                                            <div class="input-group">
+                                                <input type="text" id="toDate" name="toDate" required class="form-control" placeholder="select to date" autocomplete="off">
                                             </div>
                                         </div>
-                                        <div class="col-md-2" style="margin-top:30px;">
-                                            <!-- <input type="submit" class="btn btn-primary" value="Search"> -->
-    
+                                        <div class="col-md-2" style="margin-top: 31px;">    
                                             <button type="submit" class="btn btn-primary">Search</button>
                                         </div>
                                     </div>
@@ -59,45 +57,41 @@
                 <div class="card">
                     <div class="card-body">
     
-                        <div class="row mt-5">
+                        <div class="row">
                             <div class="col-md-12">
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <h4 class="card-title">Total Tweets Beetween on Date</h4>
+                                            <h4 class="card-title">Total Tweets Between Dates</h4>
                                             <ul class="list-group">
-                                                <li class="list-group-item active">Tweet Found On Date:<span
-                                                        class="badge badge-danger ml-2" id="Rtodate">{{todate}}</span>
-                                                    <span class="badge badge-danger ml-1" id="Rfromdate">{{fromdate}}</span>
-                                                    <span class="badge badge-danger float-right"
-                                                        id="Rdatecount">{{datecount}}</span></li>
+                                                <li class="list-group-item active">Tweets Found on Date:
+                                                    <span class="badge badge-danger ml-2" id="returnFromDate"></span>
+                                                    <span class="badge badge-danger ml-1" id="returnToDate"></span>
+                                                    <span class="badge badge-danger float-right" id="allTweets"></span>
+                                                </li>
                                             </ul>
                                             <ul class="list-group" id="tweetsList">
-    
-                                                <li class="list-group-item">Tweet Found On Date:<span
-                                                        class="badge badge-info ml-2">{{datewise.bydate}}</span>
-                                                    <span
-                                                        class="badge badge-info float-right">{{datewise.couttweets}}</span>
-    
+                                                <li class="list-group-item">
+                                                    Tweets Found on Date:
+                                                    <span class="badge badge-info ml-2"></span>
+                                                    <span class="badge badge-info float-right"></span>
                                                 </li>
-    
                                             </ul>
                                         </div>
                                     </div>
                                     <div class="row mt-5">
                                         <div class="col-md-12">
-                                            <h4 class="card-title">Total Tweets On Keyword</h4>
+                                            <h4 class="card-title">Total Tweets on Keywords</h4>
                                             <ul class="list-group">
-                                                <li class="list-group-item active">Total Tweets on keywords<span
-                                                        class="badge badge-danger float-right" id="counter"></span>
+                                                <li class="list-group-item active">
+                                                    Total Tweets on keywords
+                                                    <span class="badge badge-danger float-right" id="allKeywords"></span>
                                                 </li>
                                             </ul>
                                             <ul class="list-group" id="listShow">
-    
-                                                <li class="list-group-item ">{{post.title}}<span
-                                                        class="badge badge-danger float-right">{{post.count}}</span>
+                                                <li class="list-group-item">
+                                                    <span class="badge badge-danger float-right"></span>
                                                 </li>
-    
                                             </ul>
                                         </div>
                                     </div>
@@ -109,47 +103,75 @@
             </div>
         </div>
         <!-- ./CONTENT -->
-
     </div>
         
     <%- include ("../partials/footer") %>
     <!-- End of footer -->
 
     <script>
+
+        $(function() {
+            $('#fromDate, #toDate').datepicker({
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                todayHighlight: true,
+                clearBtn: true,
+                endDate: '0d'
+            });
+        });
+        // from date must be less than to date
+        $(document).ready(function(){
+            $("#fromDate").datepicker().on('changeDate', function(selected){
+                fromDate = new Date(selected.date.valueOf());
+                $('#toDate').datepicker('setStartDate', fromDate);
+            });  
+
+            $("#toDate").datepicker().on('changeDate', function(selected){
+                toDate = new Date(selected.date.valueOf());
+                $('#fromDate').datepicker('setEndDate', toDate);
+            }) 
+        });
+
         $("#formsubmit").submit(function () {
             $(".preloader").fadeIn();
 
-            var todate = $("#todate").val();
-            var fromdate = $("#fromdate").val();
+            var fromdate = $("#fromDate").val();
+            var todate = $("#toDate").val();
             $.ajax({
-                url: "{% url 'reports' %}",
+                url: "/blog/tweets/report",
                 type: 'POST',
                 data: {
-                    todate: todate,
                     fromdate: fromdate,
-                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    todate: todate
                 },
-                success: function (json) {
-                    console.log(json.posts)
-                    $("#counter").text(json.counter);
-                    $("#Rdatecount").text(json.datecount);
-                    $("#Rtodate").text(json.todate);
-                    $("#Rfromdate").text(json.fromdate);
-                    $("#listShow").empty();
-                    $("#tweetsList").empty();
-                    for (i = 0; i < json.posts.length; i++) { $("#listShow").append('<li class="list-group-item ">' + json.posts[i].title + '<span class="badge badge-danger float-right">' + json.posts[i].count + '</span>' + '</li>') }
-
-                    //tweets list by date
-                    for (i = 0; i < json.coutdate.length; i++) {
-                        $("#tweetsList").append('<li class="list-group-item">Tweet Found On Date:<span class="badge badge-info ml-2">' + json.coutdate[i].bydate + '</span>' +
-                            '<span class="badge badge-info float-right">' + json.coutdate[i].couttweets + '</span>' + '</li>')
+                success: function (data) {
+                    $(".preloader").fadeOut();
+                    if(data.success) {
+                        $("#allTweets").text(data.allTweets);
+                        $("#allKeywords").text(data.allKeywords);
+                        $("#returnFromDate").text(data.fromDate);
+                        $("#returnToDate").text(data.toDate);
+                        $("#tweetsList").empty();
+                        //tweets list by date
+                        for (i = 0; i < data.tweetsArr.length; i++) {
+                            $("#tweetsList").append('<li class="list-group-item">Tweets Found on Date: <span class="badge badge-info ml-2">' + data.tweetsArr[i].onDate + '</span>' +
+                            '<span class="badge badge-info float-right">' + data.tweetsArr[i].totalTweets + '</span>' + '</li>')
+                        }
+                        // keywords list
+                        $("#listShow").empty();
+                        for (i = 0; i < data.keywordsArr.length; i++) {
+                            $("#listShow").append('<li class="list-group-item ">' + data.keywordsArr[i].title + '<span class="badge badge-danger float-right">' + data.keywordsArr[i].totalKeywords + '</span>' + '</li>');
+                        }
+    
+                    } else {
+                        alert('Failed, '+data.msg);
                     }
-                $(".preloader").fadeOut();
-
-
                 },
 
-                error: function (xhr, errmsg, err) { }
+                error: function (xhr, errmsg, err) {
+                    $(".preloader").fadeOut();
+                    alert('Failed! '+err);
+                 }
             })
             return false;
         })
