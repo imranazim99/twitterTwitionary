@@ -226,7 +226,7 @@ router.post('/tweets/search', async (req, res) => {
                 });
             })
             // #end foreach
-            console.log('posts: ', postArr)
+            // console.log('posts: ', postArr)
         res.send({
             'success':          true,
             'posts':            postArr,
@@ -339,7 +339,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
                     "message": "Sorry, There were no tweets found for the user "+searchKey
                 });
             } else {
-                console.log(data)
+                // console.log(data)
                 res.send({
                     "success": true,
                     "dataArr": data
@@ -487,34 +487,37 @@ router.post('/keyword/add', (req, res) => {
                 "msg": "Record has been added successfully."
             });
         }).catch(err => {
+            let msg = 'Error! Something went wrong. '+err;
+            if(err.original.sqlMessage) {
+                msg = err.original.sqlMessage;
+            }
             res.send({
                 "success": false,
-                "msg": 'Error! Something went wrong. '+err
+                "msg": msg
             });
         })
     }
 })
 // #update keyword
 router.post('/keyword/update', (req, res) => {
-    if(req.body.Id && req.body.keyword) {
-        Keyword.update({
-                Keyword: req.body.keyword,
-            },
-            {
-                where: {
-                    Id: req.body.Id
-                }
-            }
-        ).then(record => {
-            console.log(record);
+    if(req.body.keyword != '') {
+        Keyword.update(
+            { Keyword: req.body.keyword },
+            { where: { Id: req.body.Id } }
+        ).then(result => {
+            console.log('updated ',result);
             res.send({
                 "success": true,
                 "msg": "Record has been udpated successfully."
             });
         }).catch(err => {
+            let msg = 'Error! Something went wrong. '+err;
+            if(err.original.sqlMessage) {
+                msg = err.original.sqlMessage;
+            }
             res.send({
                 "success": false,
-                "msg": 'Error! Something went wrong. '+err
+                "msg": msg
             });
         })
     }
@@ -527,7 +530,7 @@ router.get('/keyword/delete/:id', (req, res) => {
                     Id: req.params.id
                 }   
             }).then(record => {
-            console.log(record);
+            console.log('deleted ',record);
             res.send({
                 "success": true,
                 "msg": "Record has been deleted successfully."
@@ -599,39 +602,5 @@ router.post('/tweets/report', async (req, res) => {
         })
     }
 })
-
-/*
- todate = str(request.POST.get('todate'))
-    if todate==None or todate=='None' :
-        return render(request, 'blog/reports.html')
-    else:
-        print('not none')
-        posts=[]
-        counter = 0
-        datecount = 0
-        todate = str(request.POST.get('todate'))
-        fromdate = str(request.POST.get('fromdate'))
-        tweets_countq_query="SELECT COUNT(Id),date(tweetcreatedts) from tbl_twitter WHERE date(tweetcreatedts) BETWEEN " '%s' " and " '%s' " GROUP BY date(tweetcreatedts)"
-        cursor.execute(tweets_countq_query,(todate,fromdate))
-        coutdate=[]
-        for count_date_row in cursor:
-                        coutdate.append({
-                            'couttweets': count_date_row[0],
-                            'bydate':count_date_row[1].strftime('%m/%d/%Y')
-                            })
-                        datecount+=count_date_row[0]
-        mydb.commit()
-        sqlite_select_query = """SELECT COUNT(h.Id),title from tbl_hashtags h JOIN tbl_keywords k on h.title=k.Keywords GROUP BY Title"""
-        cursor.execute(sqlite_select_query)
-        for row in cursor:
-                posts.append({
-                    'count': row[0],
-                    'title': row[1]})
-                counter+=row[0]
-        posts={
-            'posts': posts,'counter':counter,'coutdate':coutdate,'todate':todate,'fromdate':fromdate,'datecount':datecount
-        }
-
-*/
 
 module.exports = router;

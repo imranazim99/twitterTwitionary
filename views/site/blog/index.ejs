@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   
-<%- include ("../partials/head") %>    
+<%- include ("../partials/head") %>
 <style>
     .LockOn {
       display: block;
@@ -488,7 +488,7 @@
                                     '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].urll + '></a></blockquote></div>');
                     
                                     html.appendTo(urlpost);
-                                    // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
+                                    // twttr.widgets.load(document.getElementById(data.posts[i].tweetId));
                                 }
                                 twttr.widgets.load(document.getElementById('urlpost'));
                             }

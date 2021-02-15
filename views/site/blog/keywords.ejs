@@ -64,33 +64,28 @@
                     </div>
                 </div>
                 <!-- Modal -->
-                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                                <div class="modal-header">
-                                    <h3>Update Keyword</h3>
-                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-                                    
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="card">
-                                                <div class="card-body">
-                                                    <h4 class="card-title">Keyword</h4>
-                                                        <div class="form-group" style="width: 100%;">
-                                                            <input type="text" class="form-control" name="keywordEdit" id="keywordEdit" required value="" placeholder="Enter keyword">
-                                                        </div>
-                                                        <input type="hidden" id="keywordId" name="keywordId"/>
-                                                        <div class="form-group">
-                                                            <button type="button" id="btnSave" class="btn btn-primary">Update</button>
-                                                        </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Update keyword</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                         </div>
+                        <form id="update_form" role="form">
+                            <div class="modal-body">
+                                <div class="form-group" style="width: 100%;">
+                                    <input type="text" class="form-control" name="keywordEdit" id="keywordEdit" required value="" placeholder="Enter keyword">
+                                </div>
+                            </div>
+                            <input type="hidden" id="keywordId" name="keywordId"/>
+                            <div class="modal-footer">
+                                <button type="submit" id="btnSave" class="btn btn-primary">Save changes</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            </div>
+                        </form>
+                    </div>
                     </div>
                 </div>
                 <!-- ./Modal -->
@@ -152,37 +147,40 @@
            $('#modal').modal('show');
        }
     // update values
-       $("#btnSave").click(function () {
+       $("#update_form").submit(function () {
+           event.preventDefault();
            var kId=$("#keywordId").val();
            var keywordEdit= $("#keywordEdit").val();
-           $(".preloader").fadeIn();
-           $.ajax({
-                url: "/blog/keyword/update",
-                type: 'POST',
-                data: {
-                    Id: kId,
-                    keyword:keywordEdit
-                },
-                success: function(data){
-                    $(".preloader").fadeOut();
-                    if (data.success) {
-                        toastr["success"](data.msg);
+           if(keywordEdit != '') {
+               $(".preloader").fadeIn();
+               $.ajax({
+                    url: "/blog/keyword/update",
+                    type: 'POST',
+                    data: {
+                        Id: kId,
+                        keyword: keywordEdit
+                    },
+                    success: function(data){
+                        $(".preloader").fadeOut();
+                        if (data.success) {
+                            toastr["success"](data.msg);
+                            }
+                        else {
+                            toastr["error"](data.msg);
                         }
-                    else {
+                        $('#modal').modal('hide');
+                
+                        $("#keywords_table tbody").empty();
+                        loadData();
+                    },
+                    error: function(xhr, errmsg, err) {
+                        $(".preloader").fadeOut();
                         toastr["error"](data.msg);
+                        $("#keywords_table tbody").empty();
+                        loadData();
                     }
-                    $('#modal').modal('hide');
-            
-                    $("#keywords_table tbody").empty();
-                    loadData();
-                },
-                error: function(xhr, errmsg, err) {
-                    $(".preloader").fadeOut();
-                    toastr["error"](data.msg);
-                    $("#keywords_table tbody").empty();
-                    loadData();
-                }
-            })
+                })
+           }
        });
     // get all keywords
        function loadData(){
@@ -197,7 +195,7 @@
                         var index = 1;
                         data.dataArr.forEach((element) => {
     
-                        tbody += '<tr style="color:#000;"><td style="display:none">' + index + '</td><td>' + index+ '</td><td>' + element.Keyword + '</td><td><button onclick="EditFun(this)" class="btn btn-info btn-sm delete-company" title="Edit '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-edit"></i> </button>&nbsp;<button onclick="Remove(this)" class="btn btn-danger btn-sm" title="Delete '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-trash"></i></button></td></tr>';
+                        tbody += '<tr style="color:#000;"><td style="display:none">' + element.Id + '</td><td>' + index+ '</td><td>' + element.Keyword + '</td><td><button onclick="EditFun(this)" class="btn btn-info btn-sm delete-company" title="Edit '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-edit"></i> </button>&nbsp;<button onclick="Remove(this)" class="btn btn-danger btn-sm" title="Delete '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-trash"></i></button></td></tr>';
                             index++
                         });
                         $("#keywords_table tbody").append(tbody);

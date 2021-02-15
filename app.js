@@ -57,7 +57,7 @@ app.use(function(req, res, next) {
 });
 
 // set the app to listen on the port
-const port = (process.env.PORT || "3500");
+const port = (process.env.PORT);
 var server = http.listen(port, () => {
     console.log('server is running on port', server.address().port);
   });
