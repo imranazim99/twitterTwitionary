@@ -348,7 +348,6 @@ router.post('/mapper/load-user-detail', (req, res) => {
         })
     } else if(searchKey && qSearch == "followers") {
         T.get('followers/list', { screen_name: searchKey, count: 20 }, async function(err, data, response) {
-            console.log(err)
             if(err) {
                 return res.send({
                     "success": false,
