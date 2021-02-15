@@ -1,17 +1,17 @@
-const sequelize = require('../../config/dbconfig');
+const sequelize = require('../config/dbconfig');
 var Sequelize = require('sequelize');
 
-  var tblKeyword = sequelize.define("tbl_keywords", {
-    Id: {
+  var Keyword = sequelize.define("keywords", {
+    ID: {
       type: Sequelize.INTEGER,
       autoIncrement: true,
       primaryKey: true
     },
-    Keyword: {
+    keyword: {
       type: Sequelize.STRING,
       allowNull: false,
       unique: true
     }
   }, {freezeTableName: true});
 
-module.exports = tblKeyword;
+module.exports = Keyword;

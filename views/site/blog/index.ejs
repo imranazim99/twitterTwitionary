@@ -335,7 +335,7 @@
                         for (var i = 0; i < data.posts.length; i++) {                       
             
                             html = $('.tweet-item').append('<div class ="col-sm-4"><a href="' + data.posts[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data.posts[i].username + '</a>' +
-                            '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].urll + '></a></blockquote></div>');
+                            '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].userUrl + '></a></blockquote></div>');
             
                             html.appendTo(urlpost);
                             // twttr.widgets.load($("blockquote[id="+data[i].tweetId+"]"));
@@ -485,7 +485,7 @@
                                 for (var i = 0; i < data.posts.length; i++) {                       
                     
                                     html = $('.tweet-item').append('<div class ="col-sm-4"><a href="' + data.posts[i].blogUrl + '" target="_blank">' + '<img src="https://img.icons8.com/fluent/48/000000/twitter.png" />' + data.posts[i].username + '</a>' +
-                                    '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].urll + '></a></blockquote></div>');
+                                    '<blockquote class="twitter-tweet spinner-border text-info" id="'+data.posts[i].tweetId+'"><a href=' + data.posts[i].userUrl + '></a></blockquote></div>');
                     
                                     html.appendTo(urlpost);
                                     // twttr.widgets.load(document.getElementById(data.posts[i].tweetId));

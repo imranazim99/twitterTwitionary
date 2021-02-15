@@ -1,10 +1,10 @@
-const sequelize = require('../../config/dbconfig');
+const sequelize = require('../config/dbconfig');
 var Sequelize = require('sequelize');
 
-const tblHashtag = require('./tbl_hashtag');
+const Hashtag = require('./hashtag');
 
-  var tblTwitter = sequelize.define("tbl_twitter", {
-    id: {
+  var Tweet = sequelize.define("tweets", {
+    ID: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true
@@ -13,11 +13,11 @@ const tblHashtag = require('./tbl_hashtag');
         type: Sequelize.STRING,
         allowNull: true
     },
-    tweetcreatedts: {
+    tweetCreatedAt: {
         type: Sequelize.STRING,
         allowNull: true
     },
-    retweetcount: {
+    retweetCount: {
         type: Sequelize.STRING,
         allowNull: true
     },
@@ -25,15 +25,15 @@ const tblHashtag = require('./tbl_hashtag');
         type: Sequelize.STRING,
         allowNull: true
     },
-    Username: {
+    username: {
         type: Sequelize.STRING,
         allowNull: true
     },
-    links: {
+    userUrl: {
         type: Sequelize.STRING,
         allowNull: true
     },
-    acctdesc: {
+    description: {
         type: Sequelize.STRING,
         allowNull: true
     },
@@ -45,24 +45,16 @@ const tblHashtag = require('./tbl_hashtag');
         type: Sequelize.STRING,
         allowNull: true
     },
-    totaltweets: {
+    totalTweets: {
         type: Sequelize.STRING,
         allowNull: true
     },
-    usercreatedts: {
-        type: Sequelize.STRING,
-        allowNull: true
-    },
-    key_words: {
-        type: Sequelize.STRING,
-        allowNull: true
-    },
-    hashtags: {
+    userCreatedAt: {
         type: Sequelize.STRING,
         allowNull: true
     }
   }, {freezeTableName: true});
 
-  tblTwitter.belongsTo(tblHashtag, {foreinKey: 'twitter_id', as: 'tbl_hashtags'});
+  Tweet.belongsTo(Hashtag, {foreinKey: 'tweet_ID', as: 'hashtags'});
 
-module.exports = tblTwitter;
+module.exports = Tweet;

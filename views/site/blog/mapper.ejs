@@ -46,7 +46,7 @@
                                         </div>
                                         <span id="totalTweets" ></span>  Tweets | 
                                         <span id="followerCount"></span>  Followers |
-                                        <span id="followingCount"></span>  Following |
+                                        <span id="followingCount"></span>  Followings |
                                         <i class="fa fa-map"></i> <span id="location"></span>
                                     </div>
                                 </form>
@@ -101,7 +101,7 @@
                
                 <div class="row" id="followings">
                     <div class="col-md-12 col-sm-12 col-xs-12 col-lg-12">
-                        <h4>All My Following</h4>
+                        <h4>All My Followings</h4>
                         <div id="followingsArr">
                        
                         </div>
@@ -170,7 +170,7 @@
                             $("#location").text(data.location);
                             $("#profileImage").attr('src', "" + data.profileImage);
                         } else {
-                            $("#name").html('<span class="text-muted">'+data.message+'</span>');
+                            $("#name").html('<span class="text-muted">'+data.msg+'</span>');
                         }
                     },
                     
@@ -248,13 +248,19 @@
                                                         '</p>'+
                                                     '</div>'+'</div>';
                                 }
-                                $("#tweetsArr").append(tweetsHtml+'<div class="card text-info" id="oldLastId"><button class="btn btn-block" type="button" id="loadMoreTweets" onclick="loadMoreTweets('+lastRecordId+')">Load More Tweets</button></div>');
+
+                                let tweetLoadMoreBtn = '<div class="card text-info" id="oldLastId"><button class="btn btn-block" type="button" id="loadMoreTweets" onclick="loadMoreTweets('+lastRecordId+')">Load More Tweets</button></div>';
+                                if(data.dataArr.length < 20) {
+                                    tweetLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
+                                }
+
+                                $("#tweetsArr").append(tweetsHtml+tweetLoadMoreBtn);
                             } else {
                                 // code
                                 $(".preloader").fadeOut();
                                 $("#tweetsArr").append('<div class="card">'+
                                 '<div class="card-body collapse show">'+
-                                    '<p class="card-text">'+data.message+'<span>'+'.'+'</span>'+
+                                    '<p class="card-text">'+data.msg+'<span>'+'.'+'</span>'+
                                         '<date><u>------</u></date>'+
                                     '</p>'+
                                 '</div>'+'</div>')
@@ -319,7 +325,7 @@
                                 $("#followersArr").append('<div class="card">'+
                                     '<div class="card-body" style="display: flex;">'+
                                         '<p class="card-text">'+
-                                            data.message
+                                            data.msg
                                         +'</p>'+
                                     '</div>'+
                                 '</div>');
@@ -383,7 +389,7 @@
                                 $("#followingsArr").append('<div class="card">'+
                                     '<div class="card-body" style="display: flex;">'+
                                         '<p class="card-text">'+
-                                            data.errorMsg
+                                            data.msg
                                         +'</p>'+
                                     '</div>'+
                                 '</div>');
@@ -439,11 +445,15 @@
                                     loadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
                                 }
                                 $("#tweetsArr").append(tweetsHtml+loadMoreBtn);
+                                window.scrollBy({
+                                    top: 380,
+                                    behavior: 'smooth'
+                                });
                             } else {
                                 // code
                                 $("#tweetsArr").append('<div class="card">'+
                                 '<div class="card-body collapse show">'+
-                                    '<p class="card-text">'+data.message+'<span>'+'.'+'</span>'+
+                                    '<p class="card-text">'+data.msg+'<span>'+'.'+'</span>'+
                                         '<date><u>------</u></date>'+
                                     '</p>'+
                                 '</div>'+'</div>')
@@ -493,11 +503,15 @@
                                 followerLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
                             }
                             $("#followersArr").append(followersHtml+followerLoadMoreBtn);
+                            window.scrollBy({
+                                top: 380,
+                                behavior: 'smooth'
+                            });
                         } else {
                             $("#followersArr").append('<div class="card">'+
                                 '<div class="card-body" style="display: flex;">'+
                                     '<p class="card-text">'+
-                                        data.errorMsg
+                                        data.msg
                                     +'</p>'+
                                 '</div>'+
                             '</div>');
@@ -547,11 +561,15 @@
                                 followingLoadMoreBtn = '<div class="card py-2 text-center text-muted"><span>No more data to be loaded.</span></div>';
                             }
                             $("#followingsArr").append(followingsHtml+followingLoadMoreBtn);
+                            window.scrollBy({
+                                top: 380,
+                                behavior: 'smooth'
+                            });
                         } else {
                             $("#followingsArr").append('<div class="card">'+
                                 '<div class="card-body" style="display: flex;">'+
                                     '<p class="card-text">'+
-                                        data.errorMsg
+                                        data.msg
                                     +'</p>'+
                                 '</div>'+
                             '</div>');

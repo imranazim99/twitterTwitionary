@@ -10,9 +10,9 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     dialect: 'mysql',
     logging: false
 });
-const Tweets = require('../../../models/site/tbl_twitter'),
-    Hashtag = require('../../../models/site/tbl_hashtag'),
-    Keyword = require('../../../models/site/tbl_keyword');
+const   Tweet = require('../../../models/tweet'),
+        Hashtag = require('../../../models/hashtag'),
+        Keyword = require('../../../models/keyword');
 
 // twitter keys
 var T = new Twit({
@@ -43,8 +43,8 @@ router.post('/tweets/count-data', async (req, res) => {
 
     if(checkBox == 'database') {
         // count all tweets
-        var sql = 'select COUNT(distinct Username) as totalUsername,COUNT(a.Id) as totalId,COUNT(distinct location) as totalLocation,SUM(retweetcount) as totalRetweet,COUNT(totaltweets) as totalTweets,sum(followers) as totalFollowers from tbl_twitter a JOIN tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" ORDER BY a.Id';
-        var totalCounts = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+        var sql = 'select COUNT(distinct username) as totalUsername,COUNT(a.ID) as totalId,COUNT(distinct location) as totalLocation,SUM(retweetCount) as totalRetweet,COUNT(totalTweets) as totalTweets,sum(followers) as totalFollowers from tweets a JOIN hashtags b ON a.ID = b.tweet_ID WHERE b.title LIKE "%'+searchKey+'" ORDER BY a.ID';
+        var totalCounts = await Tweet.sequelize.query(sql, { type: QueryTypes.SELECT });
 
         totalCounts.forEach(tweet => {
             count_username  = tweet.totalUsername;
@@ -65,7 +65,7 @@ router.post('/tweets/count-data', async (req, res) => {
         });
     } else {
         T.get('search/tweets', { q: searchKey, count: 100 }, async function(err, data, response) {
-            console.log('count data: ', data)
+            // console.log('count data: ', data)
             var result = data.statuses;
             result.forEach(item => {
                 tweets_count += item.user.statuses_count;
@@ -99,9 +99,9 @@ router.post('/tweets/chart-data', async (req, res) => {
     var greatCounter = 0; var goodCounter = 0; var neutralCounter = 0; var badCounter = 0; var terribleCounter = 0;
     let countDateArr = [];
     if(checkBox == 'database') {
-        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id';
+        var sql = 'SELECT tt.*, th.* FROM tweets as tt LEFT JOIN hashtags as th on tt.ID = th.tweet_ID WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.ID';
 
-        var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+        var result = await Tweet.sequelize.query(sql, { type: QueryTypes.SELECT });
             // console.log('dataa: ', result);
             result.forEach(item => {
                 var checkText = sentimentAnalysis(item.text);
@@ -125,8 +125,8 @@ router.post('/tweets/chart-data', async (req, res) => {
             });
 
             // count tweets by date for linear chart
-            var sql2 = 'select count(a.id) as totalId, date(tweetcreatedts) as date FROM twitter.tbl_twitter a JOIN twitter.tbl_hashtags b on a.Id=b.twitter_id WHERE b.title LIKE "%'+searchKey+'" group by date(tweetcreatedts)';
-            var tweetsByDate = await Tweets.sequelize.query(sql2, { type: QueryTypes.SELECT });
+            var sql2 = 'select count(a.ID) as totalId, DATE(tweetCreatedAt) as date FROM tweets a JOIN hashtags b on a.ID = b.tweet_ID WHERE b.title LIKE "%'+searchKey+'" group by DATE(tweetCreatedAt)';
+            var tweetsByDate = await Tweet.sequelize.query(sql2, { type: QueryTypes.SELECT });
 
             tweetsByDate.forEach(tweetByDt => {
                 var dt = tweetByDt.date;
@@ -210,19 +210,19 @@ router.post('/tweets/search', async (req, res) => {
             startdb = req.body.startdb;
         }
         // console.log('dtstart: ', startdb)
-        var sql = 'SELECT tt.*, th.* FROM tbl_twitter as tt LEFT JOIN tbl_hashtags as th on tt.id = th.twitter_id WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.id LIMIT '+startdb+', 6';
+        var sql = 'SELECT tt.*, th.* FROM tweets as tt LEFT JOIN hashtags as th on tt.ID = th.tweet_ID WHERE th.title LIKE "%'+searchKey+'" ORDER BY tt.ID LIMIT '+startdb+', 6';
 
-        var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+        var result = await Tweet.sequelize.query(sql, { type: QueryTypes.SELECT });
             // console.log('dataa: ', result);
             result.forEach(item => {
                 
                 postArr.push({
-                    'Id'            : item.id,
-                    'tweetId'       : item.id,
-                    'username'      : item.Username,
-                    'urll'          : item.links,
-                    'blogUrl'       : "/blog/mapper?search="+item.Username,
-                    'description'   : item.acctdesc
+                    'Id'            : item.ID,
+                    'tweetId'       : item.ID,
+                    'username'      : item.username,
+                    'userUrl'       : item.userUrl,
+                    'blogUrl'       : "/blog/mapper?search="+item.username,
+                    'description'   : item.description
                 });
             })
             // #end foreach
@@ -255,7 +255,7 @@ router.post('/tweets/search', async (req, res) => {
                     'Id'            : item.user.id,
                     'tweetId'       : item.id,
                     'username'      : item.user.screen_name,
-                    'urll'          : "https://twitter.com/user/status/"+item.id_str,
+                    'userUrl'       : "https://twitter.com/user/status/"+item.id_str,
                     'blogUrl'       : "/blog/mapper?search="+item.user.screen_name,
                     'description'   : item.user.description
                 });
@@ -327,7 +327,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
             } else if(err) {
                 return res.send({
                     "success": false,
-                    "message": "Sorry, that page does not exist. Try again please!"
+                    "msg": "Sorry, that page does not exist. Try again please!"
                 });
             }
         })
@@ -336,7 +336,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "message": "Sorry, There were no tweets found for the user "+searchKey
+                    "msg": "Sorry, There were no tweets found for the user "+searchKey
                 });
             } else {
                 // console.log(data)
@@ -352,7 +352,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "message": "Sorry, There were no followers found for the user @"+searchKey
+                    "msg": "Sorry, There were no followers found for the user @"+searchKey
                 });
             } else {
                 res.send({
@@ -367,7 +367,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "message": "Sorry, There were no followings found for the user @"+searchKey
+                    "msg": "Sorry, There were no followings found for the user @"+searchKey
                 });
             } else {
                 res.send({
@@ -380,7 +380,7 @@ router.post('/mapper/load-user-detail', (req, res) => {
     } else {
         return res.send({
             "success": false,
-            "message": "Please enter correct username and try again, please!"
+            "msg": "Please enter correct username and try again, please!"
         });
     }
 })
@@ -395,7 +395,7 @@ router.post('/mapper/user/load-more', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                    "msg": "Sorry, There were no more data found for the user @"+searchKey
                 });
             } else {
                 // console.log('Id: '+maxId+' == '+data)
@@ -412,7 +412,7 @@ router.post('/mapper/user/load-more', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                    "msg": "Sorry, There were no more data found for the user @"+searchKey
                 });
             } else {
                 res.send({
@@ -429,7 +429,7 @@ router.post('/mapper/user/load-more', (req, res) => {
             if(err) {
                 return res.send({
                     "success": false,
-                    "errorMsg": "Sorry, There were no more data found for the user @"+searchKey
+                    "msg": "Sorry, There were no more data found for the user @"+searchKey
                 });
             } else {
                 res.send({
@@ -444,7 +444,7 @@ router.post('/mapper/user/load-more', (req, res) => {
         res.send({
             "success": false,
             "dataArr": '',
-            "errorMsg": 'Something went wrong!'
+            "msg": 'Something went wrong!'
         });
     }
 })
@@ -479,7 +479,7 @@ router.get('/keywords/get', (req, res) => {
 router.post('/keyword/add', (req, res) => {
     if(req.body.keyword) {
         Keyword.create({
-            Keyword: req.body.keyword
+            keyword: req.body.keyword
         }).then(record => {
             console.log(record);
             res.send({
@@ -502,8 +502,8 @@ router.post('/keyword/add', (req, res) => {
 router.post('/keyword/update', (req, res) => {
     if(req.body.keyword != '') {
         Keyword.update(
-            { Keyword: req.body.keyword },
-            { where: { Id: req.body.Id } }
+            { keyword: req.body.keyword },
+            { where: { ID: req.body.Id } }
         ).then(result => {
             console.log('updated ',result);
             res.send({
@@ -527,7 +527,7 @@ router.get('/keyword/delete/:id', (req, res) => {
     if(req.params.id) {
         Keyword.destroy({
                 where: {
-                    Id: req.params.id
+                    ID: req.params.id
                 }   
             }).then(record => {
             console.log('deleted ',record);
@@ -561,8 +561,8 @@ router.post('/tweets/report', async (req, res) => {
     const toDate = req.body.todate;
     if(fromDate != '' && toDate != '') {
         let tweetsArr = [], keywordsArr = [];
-        let sql = 'SELECT COUNT(Id) as totalTweets, DATE(tweetcreatedts) as onDate from tbl_twitter WHERE date(tweetcreatedts) BETWEEN "'+fromDate+'" AND "'+toDate+'" GROUP BY DATE(tweetcreatedts)';
-        var result = await Tweets.sequelize.query(sql, { type: QueryTypes.SELECT });
+        let sql = 'SELECT COUNT(ID) as totalTweets, DATE(tweetCreatedAt) as onDate FROM tweets WHERE DATE(tweetCreatedAt) BETWEEN "'+fromDate+'" AND "'+toDate+'" GROUP BY DATE(tweetCreatedAt)';
+        var result = await Tweet.sequelize.query(sql, { type: QueryTypes.SELECT });
         // console.log(result)
         let allTweets = 0;
         result.forEach(item => {
@@ -573,7 +573,7 @@ router.post('/tweets/report', async (req, res) => {
             allTweets += item.totalTweets;
         });
 
-        let sql2 = 'SELECT COUNT(h.Id) as totalKeywords, h.title as title from tbl_hashtags h JOIN tbl_keywords k on h.title = k.Keyword GROUP BY h.title';
+        let sql2 = 'SELECT COUNT(h.ID) as totalKeywords, h.title as title FROM hashtags h JOIN keywords k on h.title = k.keyword GROUP BY h.title';
         var result2 = await Hashtag.sequelize.query(sql2, { type: QueryTypes.SELECT });
         let allKeywords = 0;
         result2.forEach(item => {

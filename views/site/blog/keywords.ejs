@@ -51,7 +51,7 @@
                                                 <th hidden>Id</th>
                                                 <th style="width: 5%;">Sr</th>
                                                 <th>Keyword</th>
-                                                <th style="width: 10%;">action</th>
+                                                <th style="width: 10%;">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -195,8 +195,9 @@
                         var index = 1;
                         data.dataArr.forEach((element) => {
     
-                        tbody += '<tr style="color:#000;"><td style="display:none">' + element.Id + '</td><td>' + index+ '</td><td>' + element.Keyword + '</td><td><button onclick="EditFun(this)" class="btn btn-info btn-sm delete-company" title="Edit '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-edit"></i> </button>&nbsp;<button onclick="Remove(this)" class="btn btn-danger btn-sm" title="Delete '+element.Keyword+'" style="cursor: pointer;"><i class="fa fa-trash"></i></button></td></tr>';
-                            index++
+                            tbody += '<tr style="color:#000;"><td style="display:none">' + element.ID + '</td><td>' + index+ '</td><td>' + element.keyword + '</td><td><button onclick="EditFun(this)" class="btn btn-info btn-sm delete-company" title="Edit '+element.keyword+'" style="cursor: pointer;"><i class="fa fa-edit"></i> </button>&nbsp;<button onclick="Remove(this)" class="btn btn-danger btn-sm" title="Delete '+element.keyword+'" style="cursor: pointer;"><i class="fa fa-trash"></i></button></td></tr>';
+                            
+                            index++;
                         });
                         $("#keywords_table tbody").append(tbody);
                         $('#keywords_table').DataTable();
