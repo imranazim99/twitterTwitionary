@@ -227,10 +227,10 @@
                 success: function (data) {
                     if(data.success) {
                         //START total tweets ,total retweets and total location
-                        $("#totalTweets").text(data.totalTweets)
-                        $("#total_retweets").text(data.retweets)
-                        $("#tweets_location").text(data.tweets_location)
-                        $("#impressions").text(data.total_followers)
+                        $("#totalTweets").text(numToLetter(data.totalTweets));
+                        $("#total_retweets").text(numToLetter(data.retweets));
+                        $("#tweets_location").text(numToLetter(data.tweets_location));
+                        $("#impressions").text(numToLetter(data.total_followers));
                         //END total tweets ,total retweets and total location
 
                         drawPieChartForTotalTweets(data);

@@ -147,20 +147,20 @@
                 success: function (data) {
                     $(".preloader").fadeOut();
                     if(data.success) {
-                        $("#allTweets").text(data.allTweets);
-                        $("#allKeywords").text(data.allKeywords);
+                        $("#allTweets").text(numToLetter(data.allTweets));
+                        $("#allKeywords").text(numToLetter(data.allKeywords));
                         $("#returnFromDate").text(data.fromDate);
                         $("#returnToDate").text(data.toDate);
                         $("#tweetsList").empty();
                         //tweets list by date
                         for (i = 0; i < data.tweetsArr.length; i++) {
                             $("#tweetsList").append('<li class="list-group-item">Tweets Found on Date: <span class="badge badge-info ml-2">' + data.tweetsArr[i].onDate + '</span>' +
-                            '<span class="badge badge-info float-right">' + data.tweetsArr[i].totalTweets + '</span>' + '</li>')
+                            '<span class="badge badge-info float-right">' + numToLetter(data.tweetsArr[i].totalTweets) + '</span>' + '</li>')
                         }
                         // keywords list
                         $("#listShow").empty();
                         for (i = 0; i < data.keywordsArr.length; i++) {
-                            $("#listShow").append('<li class="list-group-item ">' + data.keywordsArr[i].title + '<span class="badge badge-danger float-right">' + data.keywordsArr[i].totalKeywords + '</span>' + '</li>');
+                            $("#listShow").append('<li class="list-group-item ">' + data.keywordsArr[i].title + '<span class="badge badge-danger float-right">' + numToLetter(data.keywordsArr[i].totalKeywords) + '</span>' + '</li>');
                         }
     
                     } else {

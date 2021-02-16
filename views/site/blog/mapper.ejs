@@ -164,9 +164,9 @@
                             $("#name").text(data.name);
                             $("#screenName").text('@'+data.screenName);
                             $("#createdAt").text(', '+data.createdAt);
-                            $("#totalTweets").text(data.totalTweets);
-                            $("#followerCount").text(data.followerCount);
-                            $("#followingCount").text(data.followingCount);
+                            $("#totalTweets").text(numToLetter(data.totalTweets));
+                            $("#followerCount").text(numToLetter(data.followerCount));
+                            $("#followingCount").text(numToLetter(data.followingCount));
                             $("#location").text(data.location);
                             $("#profileImage").attr('src', "" + data.profileImage);
                         } else {
