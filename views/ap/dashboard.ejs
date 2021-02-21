@@ -27,23 +27,81 @@
       <section class="content">
         <!-- Info boxes -->
         <div class="row">
-          <div class="col-md-6 col-sm-6 col-xs-12">
-            <div class="info-box">
-              <a href="#">
-                <span class="info-box-icon bg-aqua"><i class="fa fa-plane"></i></span>
-                <div class="info-box-content">
-                  <span class="info-box-text">Users</span>
-                  <% if(locals.products){ %>
-                  <span class="info-box-number">
-                    <%=products%></span>
-                  <% } %>
+          <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-green">
+                <div class="inner">
+                    <h3 id="totalKeyword">
+                      <i class="fa fa-spinner fa-spin"></i>
+                    </h3>
+                    <p>Total Keywords</p>
                 </div>
-              </a>
-              <!-- /.info-box-content -->
+                <div class="icon">
+                    <i class="fa fa-key"></i>
+                </div>
+                <a href="#" class="small-box-footer ajax" data-toggle="tab">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
             </div>
-            <!-- /.info-box -->
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+          <!-- small box -->
+          <div class="small-box bg-blue">
+            
+              <div class="inner">
+                  <h3 id="totalTweetsScrapped">
+                    <i class="fa fa-spinner fa-spin"></i>
+                  </h3>
+                  <p>Total Tweets Scrapped</p>
+              </div>
+              <div class="icon">
+                  <i class="fa fa-twitter"></i>
+              </div>
+              <a href="#" class="small-box-footer ajax" data-toggle="tab">
+                  More info <i class="fa fa-arrow-circle-right"></i>
+              </a>
           </div>
-          <!-- /.col -->
+      </div>
+      <!-- ./col -->
+      <div class="col-lg-3 col-xs-6">
+        <!-- small box -->
+        <div class="small-box bg-yellow">
+            <div class="inner">
+                <h3>0
+                  <!-- <i class="fa fa-spinner fa-spin"></i> -->
+                </h3>
+
+                <p>Other tab</p>
+            </div>
+            <div class="icon">
+                <i class="fa fa-open"></i>
+            </div>
+            <a href="#" class="small-box-footer ajax" data-toggle="tab">
+                More info <i class="fa fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+    <!-- ./col -->
+    <div class="col-lg-3 col-xs-6">
+      <!-- small box -->
+      <div class="small-box bg-purple">
+          <div class="inner">
+              <h3>0
+                <!-- <i class="fa fa-spinner fa-spin"></i> -->
+              </h3>
+
+              <p>Other tab</p>
+          </div>
+          <div class="icon">
+              <i class="fa fa-purple"></i>
+          </div>
+          <a href="#" class="small-box-footer ajax" data-toggle="tab">
+              More info <i class="fa fa-arrow-circle-right"></i>
+          </a>
+      </div>
+  </div>
+  <!-- ./col -->
 
           <!-- fix for small devices only -->
           <div class="clearfix visible-sm-block"></div>
@@ -59,7 +117,7 @@
               <div class="box-header with-border">
                 <i class="fa fa-plane"></i>
 
-                <h3 class="box-title">Users</h3>
+                <h3 class="box-title">Tweets by Keywords</h3>
 
                 <div class="box-tools pull-right">
                   <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
@@ -68,7 +126,7 @@
                 </div>
               </div>
               <div class="box-body">
-                <div id="product-chart" style="height: 300px;"></div>
+                <div id="keywords_tweets_chart" style="height: 300px;"></div>
               </div>
               <!-- /.box-body-->
             </div>
@@ -90,42 +148,69 @@
   <script>
     $(function () {
         $(".home").addClass('active');
-        Highcharts.chart('product-chart', {
+        // Total count
+        totalKeywords();
+        totalTweetsScrapped();
+        keywordsTweetsGraph();
+    });
+    // total keywords
+    function totalKeywords() {
+      $.ajax({
+        url: "/ap/total-keywords/count",
+        type: 'GET',
+        data: {},
+        success: function(data){
+          if(data.success) {
+            $("#totalKeyword").text(data.totalKeywords);
+          }
+        },
+        error: function(xhr, errmsg, err) {
+          $("#totalKeyword").text('Error loading');
+        }
+      })
+    }
+    // total tweets scrapped
+    function totalTweetsScrapped() {
+      $.ajax({
+        url: "/ap/total-tweets-scrapped/count",
+        type: 'GET',
+        data: {},
+        success: function(data){
+          if(data.success) {
+            $("#totalTweetsScrapped").text(data.totalTweetsScrapped);
+          }
+        },
+        error: function(xhr, errmsg, err) {
+          $("#totalKeyword").text('Error loading');
+        }
+      })
+    }
+    // draw chart
+    function keywordsTweetsGraph() {
+      var options = {
             chart: {
+                renderTo: 'keywords_tweets_chart',
                 type: 'column'
             },
             title: {
-                text: 'Users'
+                text: ''
             },
             subtitle: {
-                text: 'For the year: ' + new Date().getFullYear()
+                text: ''
             },
             xAxis: {
-                categories: [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec'
-                ],
+                categories: [],
                 crosshair: true
             },
             yAxis: {
                 min: 0,
                 title: {
-                    text: 'No. of Users'
+                    text: 'No. of Tweets'
                 }
             },
             tooltip: {
                 headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                pointFormat: '<tr><td style="color:{series.color};padding:0">Tweets: </td>' +
                     '<td style="padding:0"><b>{point.y:.f}</b></td></tr>',
                 footerFormat: '</table>',
                 shared: true,
@@ -138,23 +223,36 @@
                 }
             },
             series: [{
-                name: 'Users',
-                data: [3,0,0,0,0,0,0],
+                name: 'Keywords',
+                data: [],
                 color: 'skyblue'
-
             }]
+        };
+        var chart = new Highcharts.Chart(options);
+        chart.showLoading();
+
+        $.ajax({
+          url: '/ap/keywords-tweets/graph',
+          type: "GET",
+          dataType: "JSON",
+          data : {},
+          success: function(data) {
+            if(data.success) {
+              let tweets = [], keywords = [];
+              for(var i = 0; i < data.tweetsByKeywords.length; i++) {
+                keywords.push(data.tweetsByKeywords[i].title);
+                tweets.push(data.tweetsByKeywords[i].totalKeywords)
+              }
+              options.xAxis.categories = keywords
+              options.series[0].data = tweets;
+            } else {
+              // code
+            }
+            chart = new Highcharts.Chart(options);
+          },
+          cache: false
         });
-    });
-    window.setTimeout(function () {
-      $(".alert").fadeTo(300, 0).slideUp(300, function () {
-        $(this).remove();
-      });
-    }, 3000);
-    // automated called functions
-    // window.onload = function () {
-    //   agencyChart();
-    //   agentChart();
-    // };
+      }
   </script>
 </body>
 
