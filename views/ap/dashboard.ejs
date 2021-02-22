@@ -104,10 +104,9 @@
   <!-- ./col -->
 
           <!-- fix for small devices only -->
-          <div class="clearfix visible-sm-block"></div>
-
-        </div>
-        <!-- /.row -->
+    <div class="clearfix visible-sm-block"></div>
+  </div>
+  <!-- /.row -->
 
         <!-- Info boxes -->
         <div class="row">
@@ -115,7 +114,7 @@
             <!-- Bar chart -->
             <div class="box box-info">
               <div class="box-header with-border">
-                <i class="fa fa-plane"></i>
+                <i class="fa fa-twitter"></i>
 
                 <h3 class="box-title">Tweets by Keywords</h3>
 
@@ -161,7 +160,7 @@
         data: {},
         success: function(data){
           if(data.success) {
-            $("#totalKeyword").text(data.totalKeywords);
+            $("#totalKeyword").text(numToLetter(data.totalKeywords));
           }
         },
         error: function(xhr, errmsg, err) {
@@ -177,7 +176,7 @@
         data: {},
         success: function(data){
           if(data.success) {
-            $("#totalTweetsScrapped").text(data.totalTweetsScrapped);
+            $("#totalTweetsScrapped").text(numToLetter(data.totalTweetsScrapped));
           }
         },
         error: function(xhr, errmsg, err) {
